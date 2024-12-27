@@ -1,9 +1,5 @@
 import hevs.graphics.FunGraphics
 
-import java.awt.Color
-import java.awt.event.{MouseEvent, MouseListener}
-import scala.util.Random
-
 class Position(var a: Int, var b: Int) {
   var x: Int = a
   var y: Int = b
@@ -18,25 +14,26 @@ object Base extends App {
   val nbOfElement: Int = 9
   val display: FunGraphics = new FunGraphics(width, height, "Our Super Game")
 
-  val box: Array[Array[Int]] = Array.ofDim(nbOfElement, nbOfElement)
+  //val box: Array[Array[Int]] = Array.ofDim(nbOfElement, nbOfElement)
 
-  val margin: Int = 40
-  val caseWidth: Int = (width - margin * 2) / nbOfElement
-  val boxWidth: Int = caseWidth * nbOfElement
-  val possibilities: Array[Int] = Array(1, 2, 3, 4, 5)
-  val fontSize: Int = 14
+ // val margin: Int = 40
+  //val caseWidth: Int = (width - margin * 2) / nbOfElement
+  //val boxWidth: Int = caseWidth * nbOfElement
+  //val possibilities: Array[Int] = Array(1, 2, 3, 4, 5)
+  //val fontSize: Int = 14
   val noPositionValue: Int = -1
-  var mySelection = new Selections()
+  //var mySelection = new Selections()
 
-  def initializeElements(arr: Array[Int]): Unit = {
+  /*def initializeElements(arr: Array[Int]): Unit = {
     for (i <- box.indices) {
       for (j <- box(i).indices) {
         box(i)(j) = arr(Random.nextInt(arr.length))
       }
     }
   }
+*/
 
-  def displayFillBox(arr: Array[Array[Int]]): Unit = {
+  /*def displayFillBox(arr: Array[Array[Int]]): Unit = {
     var iCount = 0
     var jCount = 0
     for (i <- margin to boxWidth by caseWidth) {
@@ -47,9 +44,11 @@ object Base extends App {
       }
       iCount += 1
     }
-  }
+  }*/
+  // initializeElements(possibilities)
+  var myGrid: Grid = new Grid(width, height, nbOfElement, display)
 
-  class Selections {
+/*  class Selections {
     var firstSelection: Position = new Position()
     var secondSelection: Position = new Position()
 
@@ -112,44 +111,11 @@ object Base extends App {
       coordinatesResult
     }
 
-  }
 
-  initializeElements(possibilities)
-
-  displayFillBox(box)
-
-  display.addMouseListener(new MouseListener {
-    override def mouseClicked(e: MouseEvent): Unit = {
-      val clickX = e.getX
-      val clickY = e.getY
-
-      val caseNumberX = (clickX - margin) / caseWidth
-      val caseNumberY = (clickY - margin) / caseWidth
-
-      mySelection.update(new Position(caseNumberX, caseNumberY))
-      var sameNeighbours: Array[Position] = mySelection.getHorizontalNeighbours(box, new Position(caseNumberX, caseNumberY))
-      for (i <- sameNeighbours) {
-        println("neighoubours", i.x, i.y)
-      }
-
-      val cellX: Int = caseNumberX * caseWidth + margin
-      val cellY: Int = caseNumberY * caseWidth + margin - fontSize
-
-      display.setColor(Color.BLUE)
-      display.drawFillRect(cellX, cellY, caseWidth, caseWidth)
-    }
-
-    override def mousePressed(e: MouseEvent): Unit = {
+  }*/
 
 
-    }
-
-    override def mouseReleased(e: MouseEvent): Unit = {}
-
-    override def mouseEntered(e: MouseEvent): Unit = {}
-
-    override def mouseExited(e: MouseEvent): Unit = {}
-  })
+  //displayFillBox(box)
 
 
 }
