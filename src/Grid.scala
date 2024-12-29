@@ -12,7 +12,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
   val possibilities: Array[Int] = Array(1, 2, 3, 4, 5)
-
+  var nbClic: Int = 0
 
   def initializeElements(arr: Array[Int]): Unit = {
     for (i <- box.indices) {
@@ -29,7 +29,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     for (i <- margin to boxWidth by caseWidth) {
       jCount = 0
       for (j <- margin to boxWidth by caseWidth) {
-        display.drawString(i, j, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
+        if (box(iCount)(jCount).display) {
+          display.drawString(i, j, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
+
+        }
         jCount += 1
       }
       iCount += 1
@@ -42,8 +45,13 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     for (i <- margin to boxWidth by caseWidth) {
       jCount = 0
       for (j <- margin to boxWidth by caseWidth) {
-        display.drawString(i + 10, j, box(iCount)(jCount).isPartOfMatch.toString, new Color(0, 0, 0), fontSize)
-        display.drawString(i + 10, j + 10, box(iCount)(jCount).countVerticalMoves.toString, new Color(0, 0, 0), fontSize)
+        if (box(iCount)(jCount).isPartOfMatch) {
+          display.drawString(i + 10, j, box(iCount)(jCount).isPartOfMatch.toString, new Color(0, 0, 0), 10)
+        }
+        if (box(iCount)(jCount).countVerticalMoves > 0) {
+          display.drawString(i + 10, j + 10, box(iCount)(jCount).countVerticalMoves.toString, new Color(0, 0, 0), 10)
+        }
+
         jCount += 1
       }
       iCount += 1
@@ -109,6 +117,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             isMatch = true
             for (k <- 0 to matchCount) {
               box(i)(j - k).isPartOfMatch = true
+              box(i)(j - k).display = false
             }
           }
         }
@@ -150,6 +159,36 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isMatch
   }
 
+  def cascadingElement(): Unit = {
+
+    //update new positions
+    for (i <- box.indices) {
+      for (j <- box(i).indices) {
+        if (box(i)(j).countVerticalMoves > 0) {
+          box(i)(j).y += 1
+          box(i)(j).countVerticalMoves -= 1
+          if (!box(i)(j).isPartOfMatch) {
+            box(i)(j).toMove = true
+          }
+
+        }
+      }
+    }
+    //place element at the right position
+    for (i <- box.indices) {
+      for (j: Int <- box(i).indices) {
+        //TODO generate new elements
+        if (box(i)(nbOfElement - j - 1).toMove) {
+
+          box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1)
+          box(i)(nbOfElement - j - 1).toMove = false
+
+
+        }
+      }
+    }
+  }
+
   // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
   def identifyVerticalMoves(): Unit = {
     for (i <- box.indices) {
@@ -169,27 +208,24 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
-  def resolveMatches():Unit = {
-    for (i<- box.indices){
-      for(j<- box(i).indices){
-        if(box(i)(j).isPartOfMatch){
-          display.setColor(Color.white)
-          display.drawFillRect(margin+box(i)(j).x*caseWidth, margin-fontSize+box(i)(j).y*caseWidth, caseWidth, caseWidth)
-
-        }
-      }
-    }
-  }
-  //def cleanGrid
-
-
   initializeElements(possibilities)
-
 
   drawElements()
   identifyMatch()
   identifyVerticalMoves()
   drawElementsTest()
+
+  def resolveMatches(): Unit = {
+    for (i <- box.indices) {
+      for (j <- box(i).indices) {
+        if (box(i)(j).isPartOfMatch) {
+          display.setColor(Color.white)
+          display.drawFillRect(margin + box(i)(j).x * caseWidth, margin - fontSize + box(i)(j).y * caseWidth, caseWidth, caseWidth)
+
+        }
+      }
+    }
+  }
 
   display.addMouseListener(new MouseListener {
     override def mouseClicked(e: MouseEvent): Unit = {
@@ -209,8 +245,18 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
       display.setColor(Color.BLUE)
       display.drawFillRect(cellX, cellY, caseWidth, caseWidth)
-      resolveMatches()
+      display.clear()
+      drawElements()
+      drawElementsTest()
 
+      nbClic += 1
+      if (nbClic > 1) {
+        display.clear()
+        cascadingElement()
+        drawElements()
+        drawElementsTest()
+        nbClic = 0
+      }
     }
 
     override def mouseReleased(e: MouseEvent): Unit = {}
