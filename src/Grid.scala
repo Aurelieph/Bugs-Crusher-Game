@@ -124,7 +124,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             isMatch = true
             for (k <- 0 to matchCount) {
               box(i)(j - k).isPartOfMatch = true
-              //to check : seems there is a bug if horizontally and vertically match, they are still displayed
               box(i)(j - k).display = false
             }
           }
@@ -192,6 +191,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
           box(i)(nbOfElement - j - 1).toMove = false
           box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1).copy()
+          box(i)(nbOfElement - j - 1).display = false
           if (nbOfElement - j - 1 == 0) {
             box(i)(nbOfElement - j - 1).toGenerate = true
           }
