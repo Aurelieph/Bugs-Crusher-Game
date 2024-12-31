@@ -1,5 +1,5 @@
 import hevs.graphics.FunGraphics
-import java.awt.event.{MouseEvent, MouseListener}
+
 import java.awt.Color
 import scala.util.Random
 
@@ -12,12 +12,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
   val possibilities: Array[Int] = Array(1, 2, 3, 4, 5)
-  var nbClic: Int = 0
 
-  def initializeElements(arr: Array[Int]): Unit = {
+  def initializeElements(): Unit = {
     for (i <- box.indices) {
       for (j <- box(i).indices) {
-        box(i)(j) = new Element(randomElement(arr), i, j)
+        box(i)(j) = new Element(randomElement(possibilities))
 
       }
     }
@@ -25,22 +24,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   def randomElement(arr: Array[Int]): Int = {
     arr(Random.nextInt(arr.length))
-  }
-
-  def drawElements(): Unit = {
-    var iCount = 0
-    var jCount = 0
-    for (i <- margin to boxWidth by caseWidth) {
-      jCount = 0
-      for (j <- margin to boxWidth by caseWidth) {
-        if (box(iCount)(jCount).display) {
-          display.drawString(i, j, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
-
-        }
-        jCount += 1
-      }
-      iCount += 1
-    }
   }
 
   def drawElementsTest(): Unit = {
@@ -65,48 +48,83 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
-  def doWeHaveAMatch(): Boolean = {
-    val impossibleValue = 99
-    var lastMatch: Int = impossibleValue
-    var matchCount: Int = 0
+  def explodeElements():Unit = {
+    display.clear()
 
-    //check vertically
-    for (i <- box.indices) {
-      for (j <- box(i).indices) {
-        if (box(i)(j).value == lastMatch) {
-
-          matchCount += 1
-          if (matchCount >= 2) return true
-        }
-        else {
-          matchCount = 0
-          lastMatch = box(i)(j).value
-
-        }
-      }
-      lastMatch = impossibleValue
-      matchCount = 0
+    var increment = 0
+    do {
+      display.clear()
+      drawElements(animation = true, increment)
+      Thread.sleep(50)
+      increment+=2
     }
-    //check horizontally
-    for (j <- box.indices) {
-      for (i <- box(j).indices) {
-        if (box(i)(j).value == lastMatch) {
-          matchCount += 1
-          if (matchCount >= 2) return true
+    while (increment<30)
 
-        }
-        else {
-          matchCount = 0
-          lastMatch = box(i)(j).value
+    display.clear()
+    drawElements()
+  }
 
+  /*  def doWeHaveAMatch(): Boolean = {
+      val impossibleValue = 99
+      var lastMatch: Int = impossibleValue
+      var matchCount: Int = 0
+
+      //check vertically
+      for (i <- box.indices) {
+        for (j <- box(i).indices) {
+          if (box(i)(j).value == lastMatch) {
+
+            matchCount += 1
+            if (matchCount >= 2) return true
+          }
+          else {
+            matchCount = 0
+            lastMatch = box(i)(j).value
+
+          }
         }
+        lastMatch = impossibleValue
+        matchCount = 0
       }
-      lastMatch = impossibleValue
-      matchCount = 0
+      //check horizontally
+      for (j <- box.indices) {
+        for (i <- box(j).indices) {
+          if (box(i)(j).value == lastMatch) {
+            matchCount += 1
+            if (matchCount >= 2) return true
+
+          }
+          else {
+            matchCount = 0
+            lastMatch = box(i)(j).value
+
+          }
+        }
+        lastMatch = impossibleValue
+        matchCount = 0
+      }
+
+
+      false
+    }*/
+
+  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
+    var iCount = 0
+    var jCount = 0
+    for (i <- margin to boxWidth by caseWidth) {
+      jCount = 0
+      for (j <- margin to boxWidth by caseWidth) {
+        if (box(iCount)(jCount).display) {
+          display.drawString(i, j + fontSize/2+3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
+
+        }
+        else if (animation && !box(iCount)(jCount).display) {
+          display.drawString(i, j + fontSize + addSize/2+3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
+        }
+        jCount += 1
+      }
+      iCount += 1
     }
-
-
-    false
   }
 
   def identifyMatch(): Boolean = {
@@ -167,18 +185,51 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isMatch
   }
 
-  def cascadingElement(): Unit = {
 
+  // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
+  def identifyVerticalMoves(): Unit = {
+    for (i <- box.indices) {
+      for (j <- box(i).indices) {
+        if (j == 0) {
+          if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
+            box(i)(nbOfElement - j - 1).countVerticalMoves = 1
+          }
+        }
+        else if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
+          box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves + 1
+        }
+        else {
+          box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves
+        }
+      }
+    }
+  }
+
+  def resolveCascading(): Unit = {
+    var isRunning: Boolean = false
+    do {
+      Thread.sleep(200)
+      display.clear()
+      isRunning = cascadingElement()
+      drawElements()
+
+    }
+    while (isRunning)
+  }
+
+  def cascadingElement(): Boolean = {
+    var isCascading = false
     //update new positions by counting how many space the element will need to drop
     //Change toMove field to true if the element hasn't been destroyed.
     for (i <- box.indices) {
       for (j <- box(i).indices) {
         if (box(i)(j).countVerticalMoves > 0) {
-          //To check if we really need the x and y position variables
-          //box(i)(j).y += 1
           box(i)(j).countVerticalMoves -= 1
           if (!box(i)(j).isPartOfMatch) {
             box(i)(j).toMove = true
+          }
+          if (box(i)(j).countVerticalMoves > 0) {
+            isCascading = true
           }
 
         }
@@ -206,8 +257,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     for (i <- box.indices) {
       for (j: Int <- box(i).indices) {
         if (box(i)(j).toGenerate) {
-          var number: Int = randomElement(possibilities)
-          println(i, j, number)
+          val number: Int = randomElement(possibilities)
           box(i)(j).updateValue(number)
           box(i)(j).toGenerate = false
           box(i)(j).isPartOfMatch = false
@@ -215,72 +265,16 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         }
       }
     }
-
+    isCascading
   }
 
-  // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
-  def identifyVerticalMoves(): Unit = {
-    for (i <- box.indices) {
-      for (j <- box(i).indices) {
-        if (j == 0) {
-          if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
-            box(i)(nbOfElement - j - 1).countVerticalMoves = 1
-          }
-        }
-        else if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
-          box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves + 1
-        }
-        else {
-          box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves
-        }
-      }
+  def resolveGrid():Unit = {
+    do{
+      identifyVerticalMoves()
+      explodeElements()
+      resolveCascading()
     }
+    while(identifyMatch())
   }
-
-  initializeElements(possibilities)
-
-  drawElements()
-  identifyMatch()
-  identifyVerticalMoves()
-  drawElementsTest()
-
-  display.addMouseListener(new MouseListener {
-    override def mouseClicked(e: MouseEvent): Unit = {
-
-    }
-
-    override def mousePressed(e: MouseEvent): Unit = {
-      val clickX = e.getX
-      val clickY = e.getY
-
-      val caseNumberX = (clickX - margin) / caseWidth
-      val caseNumberY = (clickY - margin) / caseWidth
-
-
-      val cellX: Int = caseNumberX * caseWidth + margin
-      val cellY: Int = caseNumberY * caseWidth + margin - fontSize
-
-      display.setColor(Color.BLUE)
-      display.drawFillRect(cellX, cellY, caseWidth, caseWidth)
-      display.clear()
-      drawElements()
-      drawElementsTest()
-
-      nbClic += 1
-      if (nbClic > 1) {
-        display.clear()
-        cascadingElement()
-        drawElements()
-        drawElementsTest()
-        nbClic = 0
-      }
-    }
-
-    override def mouseReleased(e: MouseEvent): Unit = {}
-
-    override def mouseEntered(e: MouseEvent): Unit = {}
-
-    override def mouseExited(e: MouseEvent): Unit = {}
-  })
 
 }
