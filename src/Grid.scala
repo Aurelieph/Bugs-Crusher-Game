@@ -17,10 +17,14 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def initializeElements(arr: Array[Int]): Unit = {
     for (i <- box.indices) {
       for (j <- box(i).indices) {
-        box(i)(j) = new Element(arr(Random.nextInt(arr.length)), i, j)
+        box(i)(j) = new Element(randomElement(arr), i, j)
 
       }
     }
+  }
+
+  def randomElement(arr: Array[Int]): Int = {
+    arr(Random.nextInt(arr.length))
   }
 
   def drawElements(): Unit = {
@@ -45,11 +49,14 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     for (i <- margin to boxWidth by caseWidth) {
       jCount = 0
       for (j <- margin to boxWidth by caseWidth) {
-        if (box(iCount)(jCount).isPartOfMatch) {
-          display.drawString(i + 10, j, box(iCount)(jCount).isPartOfMatch.toString, new Color(0, 0, 0), 10)
+        if (box(iCount)(jCount).toMove) {
+          display.drawString(i + 10, j, box(iCount)(jCount).toMove.toString, Color.green, 10)
+        }
+        if (box(iCount)(jCount).toGenerate) {
+          display.drawString(i + 10, j + 10, box(iCount)(jCount).toGenerate.toString, Color.blue, 10)
         }
         if (box(iCount)(jCount).countVerticalMoves > 0) {
-          display.drawString(i + 10, j + 10, box(iCount)(jCount).countVerticalMoves.toString, new Color(0, 0, 0), 10)
+          display.drawString(i + 10, j + 20, box(iCount)(jCount).countVerticalMoves.toString, Color.red, 10)
         }
 
         jCount += 1
@@ -117,6 +124,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             isMatch = true
             for (k <- 0 to matchCount) {
               box(i)(j - k).isPartOfMatch = true
+              //to check : seems there is a bug if horizontally and vertically match, they are still displayed
               box(i)(j - k).display = false
             }
           }
@@ -141,6 +149,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             isMatch = true
             for (k <- 0 to matchCount) {
               box(i - k)(j).isPartOfMatch = true
+              box(i - k)(j).display = false
             }
           }
 
@@ -161,11 +170,13 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   def cascadingElement(): Unit = {
 
-    //update new positions
+    //update new positions by counting how many space the element will need to drop
+    //Change toMove field to true if the element hasn't been destroyed.
     for (i <- box.indices) {
       for (j <- box(i).indices) {
         if (box(i)(j).countVerticalMoves > 0) {
-          box(i)(j).y += 1
+          //To check if we really need the x and y position variables
+          //box(i)(j).y += 1
           box(i)(j).countVerticalMoves -= 1
           if (!box(i)(j).isPartOfMatch) {
             box(i)(j).toMove = true
@@ -174,19 +185,37 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         }
       }
     }
-    //place element at the right position
+    //place element at the right position, starting from the bottom
     for (i <- box.indices) {
       for (j: Int <- box(i).indices) {
-        //TODO generate new elements
         if (box(i)(nbOfElement - j - 1).toMove) {
 
-          box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1)
           box(i)(nbOfElement - j - 1).toMove = false
+          box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1).copy()
+          if (nbOfElement - j - 1 == 0) {
+            box(i)(nbOfElement - j - 1).toGenerate = true
+          }
 
-
+        }
+        if (nbOfElement - j - 1 == 0 && !box(i)(nbOfElement - j - 1).display) {
+          box(i)(nbOfElement - j - 1).toGenerate = true
         }
       }
     }
+
+    for (i <- box.indices) {
+      for (j: Int <- box(i).indices) {
+        if (box(i)(j).toGenerate) {
+          var number: Int = randomElement(possibilities)
+          println(i, j, number)
+          box(i)(j).updateValue(number)
+          box(i)(j).toGenerate = false
+          box(i)(j).isPartOfMatch = false
+          box(i)(j).display = true
+        }
+      }
+    }
+
   }
 
   // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
@@ -214,18 +243,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   identifyMatch()
   identifyVerticalMoves()
   drawElementsTest()
-
-  def resolveMatches(): Unit = {
-    for (i <- box.indices) {
-      for (j <- box(i).indices) {
-        if (box(i)(j).isPartOfMatch) {
-          display.setColor(Color.white)
-          display.drawFillRect(margin + box(i)(j).x * caseWidth, margin - fontSize + box(i)(j).y * caseWidth, caseWidth, caseWidth)
-
-        }
-      }
-    }
-  }
 
   display.addMouseListener(new MouseListener {
     override def mouseClicked(e: MouseEvent): Unit = {
