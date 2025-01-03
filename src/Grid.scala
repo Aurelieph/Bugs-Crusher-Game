@@ -59,7 +59,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def resolveGrid(): Unit = {
-    drawElements()
+
     while (identifyMatch()) {
       identifyVerticalMoves()
       explodeElements()
@@ -68,7 +68,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   }
 
-  def identifyMatch(): Boolean = {
+  def identifyMatch(highJack: Boolean = false): Boolean = {
     val impossibleValue = 99
     var lastMatch: Int = impossibleValue
     var matchCount: Int = 0
@@ -81,6 +81,9 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
           if (box(i)(j).value == lastMatch) {
             matchCount += 1
             if (matchCount >= 2) {
+              if (highJack) {
+                return true
+              }
               isMatch = true
               for (k <- 0 to matchCount) {
                 box(i)(j - k).isPartOfMatch = true
@@ -107,6 +110,9 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
           if (box(i)(j).value == lastMatch) {
             matchCount += 1
             if (matchCount >= 2) {
+              if (highJack) {
+                return true
+              }
               isMatch = true
               for (k <- 0 to matchCount) {
                 box(i - k)(j).isPartOfMatch = true
@@ -166,31 +172,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
     }
     while (isRunning)
-  }
-
-  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
-    var iCount = 0
-    var jCount = 0
-    try {
-      for (i <- margin to boxWidth by caseWidth) {
-        jCount = 0
-        for (j <- margin to boxWidth by caseWidth) {
-          if (box(iCount)(jCount).display) {
-            display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
-
-          }
-          else if (animation && !box(iCount)(jCount).display) {
-            display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
-          }
-          jCount += 1
-        }
-        iCount += 1
-      }
-    }
-    catch {
-      case e: Exception => println("drawElements: ", e.printStackTrace())
-    }
-
   }
 
   def cascadingElement(): Boolean = {
@@ -273,12 +254,38 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     drawElements()
   }
 
+  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
+    var iCount = 0
+    var jCount = 0
+    try {
+      for (i <- margin to boxWidth by caseWidth) {
+        jCount = 0
+        for (j <- margin to boxWidth by caseWidth) {
+          if (box(iCount)(jCount).display) {
+            display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
+
+          }
+          else if (animation && !box(iCount)(jCount).display) {
+            display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
+          }
+          jCount += 1
+        }
+        iCount += 1
+      }
+    }
+    catch {
+      case e: Exception => println("drawElements: ", e.printStackTrace())
+    }
+
+  }
+
   def select(x: Int, y: Int): Boolean = {
-    var isValid = false
+    var areThereTwoSelections = false
+    val cellX: Int = x * caseWidth + margin
+    val cellY: Int = y * caseWidth + margin
     // reinitialise if there is a weird combination
     if (select1.x == -1 || select1.y == -1) {
-      select1 = new Position()
-      select2 = new Position()
+      resetSelection()
     }
     else if (!select2.isEmpty() && (select2.x == -1 || select2.y == -1)) {
       select2 = new Position()
@@ -287,31 +294,60 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     // check which variable need to be assigned
     if (select1.isEmpty()) {
       select1 = new Position(x, y)
-      isValid = true
+      drawSelection(cellX, cellY)
     }
     else if (!select1.isEmpty() && select2.isEmpty() && isNeighbour(select1, x, y)) {
       select2 = new Position(x, y)
-      isValid = true
+      drawSelection(cellX, cellY)
+      areThereTwoSelections = true
 
     }
 
     else {
       select1 = new Position()
       select2 = new Position()
+      clean()
     }
 
-    println(select1.x, select1.y, select2.x, select2.y)
-    isValid
+    areThereTwoSelections
   }
 
   def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
-    x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
-      {x >= position.x - 1 && x <= position.x + 1 && y == position.y }
+    !(position.x == x && position.y == y) &&
+      (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
+        (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
   }
 
   def drawSelection(x: Int, y: Int): Unit = {
     display.setColor(Color.BLUE)
     display.drawCircle(x, y, caseWidth)
+  }
+
+  def rollBack(): Boolean = {
+    switchPosition()
+    resetSelection()
+    false
+
+  }
+
+  def switchPosition(): Boolean = {
+    var isValid: Boolean = false
+
+    val temp: Element = box(select1.x)(select1.y)
+    box(select1.x)(select1.y) = box(select2.x)(select2.y).copy()
+    box(select2.x)(select2.y) = temp
+    clean()
+    if (identifyMatch(true)) {
+      isValid = true
+      resetSelection()
+    }
+    Thread.sleep(300)
+    isValid
+  }
+
+  def resetSelection(): Unit = {
+    select1 = new Position()
+    select2 = new Position()
   }
 
 }

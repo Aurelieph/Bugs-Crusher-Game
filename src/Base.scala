@@ -1,6 +1,5 @@
 import hevs.graphics.FunGraphics
 
-import java.awt.Color
 import java.awt.event.{MouseEvent, MouseListener}
 
 object Base extends App {
@@ -11,6 +10,7 @@ object Base extends App {
   var myGrid: Grid = new Grid(width, height, nbOfElement, display)
 
   myGrid.initializeElements()
+  myGrid.drawElements()
   myGrid.resolveGrid()
 
   display.addMouseListener(new MouseListener {
@@ -22,14 +22,14 @@ object Base extends App {
       val clickY = e.getY
       val caseNumberX = (clickX - myGrid.margin) / myGrid.caseWidth
       val caseNumberY = (clickY - myGrid.margin) / myGrid.caseWidth
-      val cellX: Int = caseNumberX * myGrid.caseWidth + myGrid.margin
-      val cellY: Int = caseNumberY * myGrid.caseWidth + myGrid.margin
 
-      if(myGrid.select(caseNumberX,caseNumberY)){
-        myGrid.drawSelection(cellX, cellY)
-      }
-      else {
-        myGrid.clean()
+      if (myGrid.select(caseNumberX, caseNumberY)) {
+        if (myGrid.switchPosition()) {
+          myGrid.resolveGrid()
+        }
+        else {
+          myGrid.rollBack()
+        }
       }
     }
 
