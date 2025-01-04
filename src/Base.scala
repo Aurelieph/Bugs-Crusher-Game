@@ -12,6 +12,7 @@ object Base extends App {
   myGrid.initializeElements()
   myGrid.drawElements()
   myGrid.resolveGrid()
+  myGrid.isThereAPossibleMove()
 
   display.addMouseListener(new MouseListener {
     override def mouseClicked(e: MouseEvent): Unit = {

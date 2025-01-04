@@ -22,7 +22,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val fontSize: Int = 14
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
-  val possibilities: Array[Int] = Array(1, 2, 3, 4, 5)
+  val possibilities: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
   var select1: Position = new Position()
   var select2: Position = new Position()
 
@@ -34,6 +34,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
       }
     }
+  }
+
+  def randomElement(arr: Array[Int]): Int = {
+    arr(Random.nextInt(arr.length))
   }
 
   def drawElementsTest(): Unit = {
@@ -59,83 +63,21 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def resolveGrid(): Unit = {
-
-    while (identifyMatch()) {
-      identifyVerticalMoves()
-      explodeElements()
-      resolveCascading()
-    }
-
-  }
-
-  def identifyMatch(highJack: Boolean = false): Boolean = {
-    val impossibleValue = 99
-    var lastMatch: Int = impossibleValue
-    var matchCount: Int = 0
-    var isMatch: Boolean = false
-
-    try {
-      //go through vertically
-      for (i <- box.indices) {
-        for (j <- box(i).indices) {
-          if (box(i)(j).value == lastMatch) {
-            matchCount += 1
-            if (matchCount >= 2) {
-              if (highJack) {
-                return true
-              }
-              isMatch = true
-              for (k <- 0 to matchCount) {
-                box(i)(j - k).isPartOfMatch = true
-                box(i)(j - k).display = false
-              }
-            }
-          }
-          else {
-            matchCount = 0
-            lastMatch = box(i)(j).value
-
-          }
-        }
-        lastMatch = impossibleValue
-        matchCount = 0
+    // Resolve matches until no more are found
+    def resolveMatches(): Unit = {
+      while (identifyMatch()) {
+        identifyVerticalMoves()
+        explodeElements()
+        resolveCascading()
       }
     }
-    //check horizontally
-    try {
-      matchCount = 0
-      lastMatch = impossibleValue
-      for (j <- box.indices) {
-        for (i <- box(j).indices) {
-          if (box(i)(j).value == lastMatch) {
-            matchCount += 1
-            if (matchCount >= 2) {
-              if (highJack) {
-                return true
-              }
-              isMatch = true
-              for (k <- 0 to matchCount) {
-                box(i - k)(j).isPartOfMatch = true
-                box(i - k)(j).display = false
-              }
-            }
 
-          }
-          else {
-            matchCount = 0
-            lastMatch = box(i)(j).value
-
-          }
-        }
-        lastMatch = impossibleValue
-        matchCount = 0
-      }
+    // Resolution logic
+    resolveMatches()
+    while (!isThereAPossibleMove()) {
+      shuffle()
+      resolveMatches()
     }
-    catch {
-      case e: Exception => println("identifyMatch: ", e.printStackTrace())
-    }
-
-    isMatch
   }
 
   // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
@@ -230,10 +172,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isCascading
   }
 
-  def randomElement(arr: Array[Int]): Int = {
-    arr(Random.nextInt(arr.length))
-  }
-
   def explodeElements(): Unit = {
     display.clear()
 
@@ -247,36 +185,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     while (increment < 30)
 
     clean()
-  }
-
-  def clean(): Unit = {
-    display.clear()
-    drawElements()
-  }
-
-  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
-    var iCount = 0
-    var jCount = 0
-    try {
-      for (i <- margin to boxWidth by caseWidth) {
-        jCount = 0
-        for (j <- margin to boxWidth by caseWidth) {
-          if (box(iCount)(jCount).display) {
-            display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
-
-          }
-          else if (animation && !box(iCount)(jCount).display) {
-            display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
-          }
-          jCount += 1
-        }
-        iCount += 1
-      }
-    }
-    catch {
-      case e: Exception => println("drawElements: ", e.printStackTrace())
-    }
-
   }
 
   def select(x: Int, y: Int): Boolean = {
@@ -312,6 +220,36 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     areThereTwoSelections
   }
 
+  def clean(): Unit = {
+    display.clear()
+    drawElements()
+  }
+
+  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
+    var iCount = 0
+    var jCount = 0
+    try {
+      for (i <- margin to boxWidth by caseWidth) {
+        jCount = 0
+        for (j <- margin to boxWidth by caseWidth) {
+          if (box(iCount)(jCount).display) {
+            display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
+
+          }
+          else if (animation && !box(iCount)(jCount).display) {
+            display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
+          }
+          jCount += 1
+        }
+        iCount += 1
+      }
+    }
+    catch {
+      case e: Exception => println("drawElements: ", e.printStackTrace())
+    }
+
+  }
+
   def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
     !(position.x == x && position.y == y) &&
       (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
@@ -321,6 +259,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def drawSelection(x: Int, y: Int): Unit = {
     display.setColor(Color.BLUE)
     display.drawCircle(x, y, caseWidth)
+  }
+
+  def resetSelection(): Unit = {
+    select1 = new Position()
+    select2 = new Position()
   }
 
   def rollBack(): Boolean = {
@@ -337,7 +280,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     box(select1.x)(select1.y) = box(select2.x)(select2.y).copy()
     box(select2.x)(select2.y) = temp
     clean()
-    if (identifyMatch(true)) {
+    if (identifyMatch(highJack = true)) {
       isValid = true
       resetSelection()
     }
@@ -345,9 +288,131 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isValid
   }
 
-  def resetSelection(): Unit = {
-    select1 = new Position()
-    select2 = new Position()
+  //highJack argument is used to only know if there is at least one match. To save perf.
+  def identifyMatch(highJack: Boolean = false): Boolean = {
+    val impossibleValue = 99
+    var lastMatch: Int = impossibleValue
+    var matchCount: Int = 0
+    var isMatch: Boolean = false
+
+    try {
+      //go through vertically
+      for (i <- box.indices) {
+        for (j <- box(i).indices) {
+          if (box(i)(j).value == lastMatch) {
+            matchCount += 1
+            if (matchCount >= 2) {
+              if (highJack) {
+                return true
+              }
+              isMatch = true
+              for (k <- 0 to matchCount) {
+                box(i)(j - k).isPartOfMatch = true
+                box(i)(j - k).display = false
+              }
+            }
+          }
+          else {
+            matchCount = 0
+            lastMatch = box(i)(j).value
+
+          }
+        }
+        lastMatch = impossibleValue
+        matchCount = 0
+      }
+    }
+    //check horizontally
+    try {
+      matchCount = 0
+      lastMatch = impossibleValue
+      for (j <- box.indices) {
+        for (i <- box(j).indices) {
+          if (box(i)(j).value == lastMatch) {
+            matchCount += 1
+            if (matchCount >= 2) {
+              if (highJack) {
+                return true
+              }
+              isMatch = true
+              for (k <- 0 to matchCount) {
+                box(i - k)(j).isPartOfMatch = true
+                box(i - k)(j).display = false
+              }
+            }
+
+          }
+          else {
+            matchCount = 0
+            lastMatch = box(i)(j).value
+
+          }
+        }
+        lastMatch = impossibleValue
+        matchCount = 0
+      }
+    }
+    catch {
+      case e: Exception => println("identifyMatch: ", e.printStackTrace())
+    }
+    isMatch
+  }
+
+  def isThereAPossibleMove(): Boolean = {
+
+    for (i <- 0 until box.length - 1) {
+      for (j <- 0 until box.length - 1) {
+        val temp: Element = box(i)(j)
+        box(i)(j) = box(i)(j + 1).copy()
+        box(i)(j + 1) = temp
+
+        val isPossible = identifyMatch(highJack = true)
+
+        box(i)(j + 1) = box(i)(j).copy()
+        box(i)(j) = temp
+
+        if (isPossible) {
+          println(i, j)
+          return true
+        }
+      }
+    }
+    //show a "no move" message in the middle of the Grid if there is no possible move
+    display.setColor(Color.WHITE)
+    display.drawFillRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+    display.setColor(Color.BLACK)
+    display.drawRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+    display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, "NO MOVE", Color.BLACK, 12)
+    Thread.sleep(2000)
+
+    shuffle()
+    false
+  }
+
+  def shuffle(): Unit = {
+
+    val tempArray: Array[Array[Element]] = Array.ofDim(nbOfElement, nbOfElement)
+
+    for (i <- box.indices) {
+      box(i)=Random.shuffle(box(i).toSeq).toArray
+    }
+
+    for (i <- box.indices) {
+      for (j <- box(i).indices) {
+        tempArray(j)(i) = box(i)(j).copy()
+      }
+    }
+    for (i <- box.indices) {
+      box(i)=Random.shuffle(tempArray(i).toSeq).toArray
+    }
+
+    for (i <- box.indices) {
+      for (j <- box(i).indices) {
+        box(i)(j) = tempArray(i)(j)
+      }
+    }
+
+    clean()
   }
 
 }
