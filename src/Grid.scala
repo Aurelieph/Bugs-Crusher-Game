@@ -22,7 +22,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val fontSize: Int = 14
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
-  val possibilities: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+  val possibilities: Array[Int] = Array(1, 2, 3, 4, 5)
   var select1: Position = new Position()
   var select2: Position = new Position()
 
@@ -128,6 +128,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             if (!box(i)(j).isPartOfMatch) {
               box(i)(j).toMove = true
             }
+            // check remove condition
             if (box(i)(j).countVerticalMoves > 0) {
               isCascading = true
             }
@@ -385,7 +386,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, "NO MOVE", Color.BLACK, 12)
     Thread.sleep(2000)
 
-    shuffle()
     false
   }
 
