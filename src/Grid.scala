@@ -22,7 +22,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val fontSize: Int = 14
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
-  val possibilities: Array[Int] = Array(1, 2, 3, 4, 5)
+  val possibilities: Array[Image] = Array("blue.png", "green.png", "purple.png", "red.png", "yellow.png")
   var select1: Position = new Position()
   var select2: Position = new Position()
 
@@ -36,7 +36,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
-  def randomElement(arr: Array[Int]): Int = {
+  def randomElement(arr: Array[Image]): Image = {
     arr(Random.nextInt(arr.length))
   }
 
@@ -158,7 +158,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       for (i <- box.indices) {
         for (j: Int <- box(i).indices) {
           if (box(i)(j).toGenerate) {
-            val number: Int = randomElement(possibilities)
+            val number: Image = randomElement(possibilities)
             box(i)(j).updateValue(number)
             box(i)(j).toGenerate = false
             box(i)(j).isPartOfMatch = false
@@ -291,8 +291,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   //highJack argument is used to only know if there is at least one match. To save perf.
   def identifyMatch(highJack: Boolean = false): Boolean = {
-    val impossibleValue = 99
-    var lastMatch: Int = impossibleValue
+    val impossibleValue = new Image("99")   //this is ugly, might need to change it
+    var lastMatch: Image = impossibleValue  //this is also ugly
     var matchCount: Int = 0
     var isMatch: Boolean = false
 

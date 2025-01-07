@@ -1,4 +1,4 @@
-class Element(var value: Int) {
+class Element(var value: Image) {
 
   var isPartOfMatch: Boolean = false
   var countVerticalMoves: Int = 0
@@ -6,7 +6,7 @@ class Element(var value: Int) {
   var toMove:Boolean = false
   var toGenerate:Boolean = false
 
-  def updateValue(newValue: Int): Unit = {
+  def updateValue(newValue: Image): Unit = {
     value = newValue
   }
 
