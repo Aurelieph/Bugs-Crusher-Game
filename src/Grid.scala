@@ -41,27 +41,27 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     arr(Random.nextInt(arr.length))
   }
 
-  def drawElementsTest(): Unit = {
-    var iCount = 0
-    var jCount = 0
-    for (i <- margin to boxWidth by caseWidth) {
-      jCount = 0
-      for (j <- margin to boxWidth by caseWidth) {
-        if (box(iCount)(jCount).toMove) {
-          display.drawString(i + 10, j, box(iCount)(jCount).toMove.toString, Color.green, 10)
-        }
-        if (box(iCount)(jCount).toGenerate) {
-          display.drawString(i + 10, j + 10, box(iCount)(jCount).toGenerate.toString, Color.blue, 10)
-        }
-        if (box(iCount)(jCount).countVerticalMoves > 0) {
-          display.drawString(i + 10, j + 20, box(iCount)(jCount).countVerticalMoves.toString, Color.red, 10)
-        }
-
-        jCount += 1
-      }
-      iCount += 1
-    }
-  }
+//  def drawElementsTest(): Unit = {
+//    var iCount = 0
+//    var jCount = 0
+//    for (i <- margin to boxWidth by caseWidth) {
+//      jCount = 0
+//      for (j <- margin to boxWidth by caseWidth) {
+//        if (box(iCount)(jCount).toMove) {
+//          display.drawString(i + 10, j, box(iCount)(jCount).toMove.toString, Color.green, 10)
+//        }
+//        if (box(iCount)(jCount).toGenerate) {
+//          display.drawString(i + 10, j + 10, box(iCount)(jCount).toGenerate.toString, Color.blue, 10)
+//        }
+//        if (box(iCount)(jCount).countVerticalMoves > 0) {
+//          display.drawString(i + 10, j + 20, box(iCount)(jCount).countVerticalMoves.toString, Color.red, 10)
+//        }
+//
+//        jCount += 1
+//      }
+//      iCount += 1
+//    }
+//  }
 
   def resolveGrid(): Unit = {
     // Resolve matches until no more are found
@@ -109,7 +109,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     var isRunning: Boolean = false
     do {
       Thread.sleep(200)
-      display.clear()
+      //display.clear()
       isRunning = cascadingElement()
       drawElements()
 
@@ -175,18 +175,18 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def explodeElements(): Unit = {
-    display.clear()
+    //display.clear()
 
     var increment = 0
     do {
-      display.clear()
+      //display.clear()
       drawElements(animation = true, increment)
       Thread.sleep(50)
       increment += 2
     }
     while (increment < 30)
 
-    clean()
+    //clean()
   }
 
   def select(x: Int, y: Int): Boolean = {
@@ -216,7 +216,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     else {
       select1 = new Position()
       select2 = new Position()
-      clean()
+      //clean()
     }
 
     areThereTwoSelections
@@ -231,16 +231,21 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     var iCount = 0
     var jCount = 0
     try {
+      val bitmapCache = box.flatten.map(cell => cell.value -> new GraphicsBitmap(cell.value)).toMap
       for (i <- margin to boxWidth by caseWidth) {
         jCount = 0
         for (j <- margin to boxWidth by caseWidth) {
+          val bitmap = bitmapCache(box(iCount)(jCount).value)
           if (box(iCount)(jCount).display) {
             //display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
-              display.drawPicture(i + caseWidth / 2, j+ caseWidth / 2, new GraphicsBitmap(box(iCount)(jCount).value))
+              display.drawPicture(i + caseWidth / 2, j+ caseWidth / 2, bitmap)
           }
-          else if (animation && !box(iCount)(jCount).display) {
+          else if (animation && !box(iCount)(jCount).display && jCount % 2 == 0) {
             //display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
-            display.drawPicture(i+ caseWidth / 2, j+ caseWidth / 2, new GraphicsBitmap(box(iCount)(jCount).value))
+            display.drawPicture(i + caseWidth / 2, j+ caseWidth / 2, bitmap)
+          }
+          else {
+            display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, new GraphicsBitmap("/res/white.png"))
           }
           jCount += 1
         }
@@ -282,7 +287,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     val temp: Element = box(select1.x)(select1.y)
     box(select1.x)(select1.y) = box(select2.x)(select2.y).copy()
     box(select2.x)(select2.y) = temp
-    clean()
+    //clean()
     if (identifyMatch(highJack = true)) {
       isValid = true
       resetSelection()

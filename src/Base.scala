@@ -10,8 +10,8 @@ object Base extends App {
   val display: FunGraphics = new FunGraphics(width, height, 0, 0, "Bugs crasher", true)
   var myGrid: Grid = new Grid(width, height, nbOfElement, display)
 
-  val img = new GraphicsBitmap("/res/blue.png")
-  display.drawPicture(50,750, img)
+//  val img = new GraphicsBitmap("/res/blue.png")
+//  display.drawPicture(50,750, img)
 
   myGrid.initializeElements()
   myGrid.drawElements()
