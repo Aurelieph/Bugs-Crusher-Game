@@ -1,4 +1,5 @@
 import hevs.graphics.FunGraphics
+import hevs.graphics.utils.GraphicsBitmap
 
 import java.awt.Color
 import scala.util.Random
@@ -22,7 +23,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val fontSize: Int = 14
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
-  val possibilities: Array[Image] = Array("blue.png", "green.png", "purple.png", "red.png", "yellow.png")
+  val possibilities: Array[String] = Array("./res/blue.png", "./res/green.png", "./res/purple.png", "./res/red.png", "./res/yellow.png")
   var select1: Position = new Position()
   var select2: Position = new Position()
 
@@ -36,7 +37,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
-  def randomElement(arr: Array[Image]): Image = {
+  def randomElement(arr: Array[String]): String = {
     arr(Random.nextInt(arr.length))
   }
 
@@ -158,7 +159,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       for (i <- box.indices) {
         for (j: Int <- box(i).indices) {
           if (box(i)(j).toGenerate) {
-            val number: Image = randomElement(possibilities)
+            val number: String = randomElement(possibilities)
             box(i)(j).updateValue(number)
             box(i)(j).toGenerate = false
             box(i)(j).isPartOfMatch = false
@@ -234,8 +235,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         jCount = 0
         for (j <- margin to boxWidth by caseWidth) {
           if (box(iCount)(jCount).display) {
-            display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
-
+            //display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
+              display.drawPicture(i, j, new GraphicsBitmap(box(iCount)(jCount).value))
           }
           else if (animation && !box(iCount)(jCount).display) {
             display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
@@ -291,8 +292,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   //highJack argument is used to only know if there is at least one match. To save perf.
   def identifyMatch(highJack: Boolean = false): Boolean = {
-    val impossibleValue = new Image("99")   //this is ugly, might need to change it
-    var lastMatch: Image = impossibleValue  //this is also ugly
+    val impossibleValue = "99"
+    var lastMatch: String = impossibleValue
     var matchCount: Int = 0
     var isMatch: Boolean = false
 
