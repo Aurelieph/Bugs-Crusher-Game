@@ -1,5 +1,4 @@
 import hevs.graphics.FunGraphics
-import hevs.graphics.utils.GraphicsBitmap
 
 import java.awt.event.{MouseEvent, MouseListener}
 
@@ -14,6 +13,8 @@ object Base extends App {
   myGrid.drawElements()
   myGrid.resolveGrid()
   myGrid.isThereAPossibleMove()
+  myGrid.displayScoring()
+
 
   display.addMouseListener(new MouseListener {
     override def mouseClicked(e: MouseEvent): Unit = {

@@ -26,6 +26,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val possibilities: Array[String] = Array("/res/blue.png", "/res/green.png", "/res/purple.png", "/res/red.png", "/res/yellow.png")
   var select1: Position = new Position()
   var select2: Position = new Position()
+  var currentLevel: Int = 1
+  var level = new Scoring(currentLevel) // 1 needs to be an incremented var
 
 
   def initializeElements(): Unit = {
@@ -214,7 +216,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     else {
       select1 = new Position()
       select2 = new Position()
-      //clean()
+      clean()
     }
 
     areThereTwoSelections
@@ -311,6 +313,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               for (k <- 0 to matchCount) {
                 box(i)(j - k).isPartOfMatch = true
                 box(i)(j - k).display = false
+                level.score += matchCount*10
               }
             }
           }
@@ -416,4 +419,26 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     clean()
   }
 
+  def nextLevel(): Unit = {
+    if (level.score == level.goal){
+      currentLevel += 1
+      level.increaseGoal(currentLevel)
+      level.decreaseMove(currentLevel)
+      level.resetScore()
+    }
+  }
+
+  def displayScoring(): Unit = {
+    display.setColor(Color.WHITE)
+    display.drawFillRect(display.getFrameWidth() / 2, display.getFrameHeight() / 2 + 100, 100, 40)
+    display.setColor(Color.BLACK)
+    display.drawRect(display.getFrameWidth() / 2, display.getFrameHeight() / 2 + 100, 100, 40)
+    display.drawString(display.getFrameWidth() / 2, display.getFrameHeight() / 2 + 100, (level.goal).toString, Color.BLACK, 20)
+  }
+
+  def endGame(): Unit = {
+    if (currentLevel == 5){
+      println("Congratulation, you beat the game")
+    }
+  }
 }
