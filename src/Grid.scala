@@ -49,6 +49,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         identifyVerticalMoves()
         explodeElements()
         resolveCascading()
+        displayScoring()
       }
     }
 
@@ -180,11 +181,12 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
 
     // check which variable need to be assigned
-    if (select1.isEmpty()) {
+
+    if (select1.isEmpty() && x<nbOfElement && y<nbOfElement) {
       select1 = new Position(x, y)
       drawSelection(cellX, cellY)
     }
-    else if (!select1.isEmpty() && select2.isEmpty() && isNeighbour(select1, x, y)) {
+    else if (!select1.isEmpty() && select2.isEmpty() && isNeighbour(select1, x, y) && x<nbOfElement && y<nbOfElement) {
       select2 = new Position(x, y)
       areThereTwoSelections = true
 
@@ -217,11 +219,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   }
 
-  def resetSelection(): Unit = {
-    select1 = new Position()
-    select2 = new Position()
-  }
-
   def switchPosition(): Boolean = {
     var isValid: Boolean = false
 
@@ -237,12 +234,18 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isValid
   }
 
+  def resetSelection(): Unit = {
+    select1 = new Position()
+    select2 = new Position()
+  }
+
   def clean(): Unit = {
     display.clear()
     drawElements()
   }
 
   def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
+    displayScoring()
     var iCount = 0
     var jCount = 0
     try {
@@ -271,6 +274,17 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   }
 
+  def displayScoring(): Unit = {
+    val height: Int = 40
+    val width: Int = 140
+    display.setColor(Color.WHITE)
+    display.drawFillRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
+    display.setColor(Color.BLACK)
+    display.drawRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50 , s"Objective: ${level.goal}", Color.BLACK, 22)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin , s"${level.score}", Color.BLACK, 22)
+  }
+
   //highJack argument is used to only know if there is at least one match. To save perf.
   def identifyMatch(highJack: Boolean = false): Boolean = {
     val impossibleValue = "99"
@@ -291,7 +305,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               for (k <- 0 to matchCount) {
                 box(i)(j - k).isPartOfMatch = true
                 box(i)(j - k).display = false
-                level.score += matchCount*10
+                level.score += matchCount * 10
               }
             }
           }
@@ -376,7 +390,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     val tempArray: Array[Array[Element]] = Array.ofDim(nbOfElement, nbOfElement)
 
     for (i <- box.indices) {
-      box(i)=Random.shuffle(box(i).toSeq).toArray
+      box(i) = Random.shuffle(box(i).toSeq).toArray
     }
 
     for (i <- box.indices) {
@@ -385,7 +399,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       }
     }
     for (i <- box.indices) {
-      box(i)=Random.shuffle(tempArray(i).toSeq).toArray
+      box(i) = Random.shuffle(tempArray(i).toSeq).toArray
     }
 
     for (i <- box.indices) {
@@ -398,7 +412,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def nextLevel(): Unit = {
-    if (level.score == level.goal){
+    if (level.score == level.goal) {
       currentLevel += 1
       level.increaseGoal(currentLevel)
       level.decreaseMove(currentLevel)
@@ -406,16 +420,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
-  def displayScoring(): Unit = {
-    display.setColor(Color.WHITE)
-    display.drawFillRect(display.getFrameWidth() / 2, display.getFrameHeight() / 2 + 100, 100, 40)
-    display.setColor(Color.BLACK)
-    display.drawRect(display.getFrameWidth() / 2, display.getFrameHeight() / 2 + 100, 100, 40)
-    display.drawString(display.getFrameWidth() / 2, display.getFrameHeight() / 2 + 100, (level.goal).toString, Color.BLACK, 20)
-  }
-
   def endGame(): Unit = {
-    if (currentLevel == 5){
+    if (currentLevel == 5) {
       println("Congratulation, you beat the game")
     }
   }

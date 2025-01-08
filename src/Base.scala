@@ -13,7 +13,7 @@ object Base extends App {
   myGrid.drawElements()
   myGrid.resolveGrid()
   myGrid.isThereAPossibleMove()
-  myGrid.displayScoring()
+
 
 
   display.addMouseListener(new MouseListener {
