@@ -11,6 +11,7 @@ class Element(var value: String) {
 
   def updateValue(newValue: String): Unit = {
     value = newValue
+    bitmap = new GraphicsBitmap(value)
   }
 
 

@@ -20,7 +20,6 @@ class Position(var x: Int, var y: Int) {
 class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: FunGraphics) {
   val box: Array[Array[Element]] = Array.ofDim(nbOfElement, nbOfElement)
   val margin: Int = 40
-  val fontSize: Int = 14
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
   val possibilities: Array[String] = Array("/res/blue.png", "/res/green.png", "/res/purple.png", "/res/red.png", "/res/yellow.png")
@@ -42,28 +41,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def randomElement(arr: Array[String]): String = {
     arr(Random.nextInt(arr.length))
   }
-
-//  def drawElementsTest(): Unit = {
-//    var iCount = 0
-//    var jCount = 0
-//    for (i <- margin to boxWidth by caseWidth) {
-//      jCount = 0
-//      for (j <- margin to boxWidth by caseWidth) {
-//        if (box(iCount)(jCount).toMove) {
-//          display.drawString(i + 10, j, box(iCount)(jCount).toMove.toString, Color.green, 10)
-//        }
-//        if (box(iCount)(jCount).toGenerate) {
-//          display.drawString(i + 10, j + 10, box(iCount)(jCount).toGenerate.toString, Color.blue, 10)
-//        }
-//        if (box(iCount)(jCount).countVerticalMoves > 0) {
-//          display.drawString(i + 10, j + 20, box(iCount)(jCount).countVerticalMoves.toString, Color.red, 10)
-//        }
-//
-//        jCount += 1
-//      }
-//      iCount += 1
-//    }
-//  }
 
   def resolveGrid(): Unit = {
     // Resolve matches until no more are found
@@ -160,8 +137,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       for (i <- box.indices) {
         for (j: Int <- box(i).indices) {
           if (box(i)(j).toGenerate) {
-            val number: String = randomElement(possibilities)
-            box(i)(j).updateValue(number)
+            val file: String = randomElement(possibilities)
+            box(i)(j).updateValue(file)
             box(i)(j).toGenerate = false
             box(i)(j).isPartOfMatch = false
             box(i)(j).display = true
@@ -222,52 +199,15 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     areThereTwoSelections
   }
 
-  def clean(): Unit = {
-    display.clear()
-    drawElements()
-  }
-
-  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
-    var iCount = 0
-    var jCount = 0
-    try {
-      for (i <- margin to boxWidth by caseWidth) {
-        jCount = 0
-        for (j <- margin to boxWidth by caseWidth) {
-          if (box(iCount)(jCount).display) {
-              display.drawPicture(i + caseWidth / 2, j+ caseWidth / 2, box(iCount)(jCount).bitmap)
-          }
-          else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
-            display.drawPicture(i + caseWidth / 2, j+ caseWidth / 2, box(iCount)(jCount).bitmap)
-          }
-          else {
-            display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, new GraphicsBitmap("/res/white.png"))
-          }
-          jCount += 1
-        }
-        iCount += 1
-      }
-    }
-    catch {
-      case e: Exception => println("drawElements: ", e.printStackTrace())
-    }
-
-  }
-
   def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
     !(position.x == x && position.y == y) &&
       (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
         (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
   }
 
-  def drawSelection(x: Int, y: Int, color:Color = Color.blue): Unit = {
+  def drawSelection(x: Int, y: Int, color: Color = Color.blue): Unit = {
     display.setColor(color)
     display.drawCircle(x, y, caseWidth)
-  }
-
-  def resetSelection(): Unit = {
-    select1 = new Position()
-    select2 = new Position()
   }
 
   def rollBack(): Boolean = {
@@ -275,6 +215,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     resetSelection()
     false
 
+  }
+
+  def resetSelection(): Unit = {
+    select1 = new Position()
+    select2 = new Position()
   }
 
   def switchPosition(): Boolean = {
@@ -292,13 +237,46 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isValid
   }
 
+  def clean(): Unit = {
+    display.clear()
+    drawElements()
+  }
+
+  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
+    var iCount = 0
+    var jCount = 0
+    try {
+      display.frontBuffer.synchronized {
+        for (i <- margin to boxWidth by caseWidth) {
+          jCount = 0
+          for (j <- margin to boxWidth by caseWidth) {
+            if (box(iCount)(jCount).display) {
+              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
+            }
+            else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
+              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
+            }
+            else {
+              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, new GraphicsBitmap("/res/white.png"))
+            }
+            jCount += 1
+          }
+          iCount += 1
+        }
+      }
+    }
+    catch {
+      case e: Exception => println("drawElements: ", e.printStackTrace())
+    }
+
+  }
+
   //highJack argument is used to only know if there is at least one match. To save perf.
   def identifyMatch(highJack: Boolean = false): Boolean = {
     val impossibleValue = "99"
     var lastMatch: String = impossibleValue
     var matchCount: Int = 0
     var isMatch: Boolean = false
-
     try {
       //go through vertically
       for (i <- box.indices) {
