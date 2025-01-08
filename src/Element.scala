@@ -1,3 +1,5 @@
+import hevs.graphics.utils.GraphicsBitmap
+
 class Element(var value: String) {
 
   var isPartOfMatch: Boolean = false
@@ -5,6 +7,7 @@ class Element(var value: String) {
   var display: Boolean = true
   var toMove:Boolean = false
   var toGenerate:Boolean = false
+  var bitmap = new GraphicsBitmap(value)
 
   def updateValue(newValue: String): Unit = {
     value = newValue
