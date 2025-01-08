@@ -23,7 +23,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val fontSize: Int = 14
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
-  val possibilities: Array[String] = Array("./res/blue.png", "./res/green.png", "./res/purple.png", "./res/red.png", "./res/yellow.png")
+  val possibilities: Array[String] = Array("/res/blue.png", "/res/green.png", "/res/purple.png", "/res/red.png", "/res/yellow.png")
   var select1: Position = new Position()
   var select2: Position = new Position()
 
@@ -236,10 +236,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         for (j <- margin to boxWidth by caseWidth) {
           if (box(iCount)(jCount).display) {
             //display.drawString(i + caseWidth / 2 - 3, j + caseWidth / 2 + 3, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize)
-              display.drawPicture(i, j, new GraphicsBitmap(box(iCount)(jCount).value))
+              display.drawPicture(i + caseWidth / 2, j+ caseWidth / 2, new GraphicsBitmap(box(iCount)(jCount).value))
           }
           else if (animation && !box(iCount)(jCount).display) {
-            display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
+            //display.drawString(i + caseWidth / 2 - 3 - (fontSize + addSize) / 4, j + caseWidth / 2 + 3 + (fontSize + addSize) / 4, box(iCount)(jCount).value.toString, new Color(0, 0, 0), fontSize + addSize)
+            display.drawPicture(i+ caseWidth / 2, j+ caseWidth / 2, new GraphicsBitmap(box(iCount)(jCount).value))
           }
           jCount += 1
         }
