@@ -28,7 +28,15 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   var currentLevel: Int = 1
   var level = new Scoring(currentLevel) // 1 needs to be an incremented var
 
-
+def start(restart:Boolean=false)={
+  if(restart){
+    display.clear()
+  }
+  initializeElements()
+  drawElements()
+  resolveGrid()
+  isThereAPossibleMove()
+}
   def initializeElements(): Unit = {
     for (i <- box.indices) {
       for (j <- box(i).indices) {
@@ -55,6 +63,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
     // Resolution logic
     resolveMatches()
+    nextLevel()
     while (!isThereAPossibleMove()) {
       shuffle()
       resolveMatches()
@@ -182,11 +191,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
     // check which variable need to be assigned
 
-    if (select1.isEmpty() && x<nbOfElement && y<nbOfElement) {
+    if (select1.isEmpty() && x < nbOfElement && y < nbOfElement) {
       select1 = new Position(x, y)
       drawSelection(cellX, cellY)
     }
-    else if (!select1.isEmpty() && select2.isEmpty() && isNeighbour(select1, x, y) && x<nbOfElement && y<nbOfElement) {
+    else if (!select1.isEmpty() && select2.isEmpty() && isNeighbour(select1, x, y) && x < nbOfElement && y < nbOfElement) {
       select2 = new Position(x, y)
       areThereTwoSelections = true
 
@@ -228,6 +237,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     clean()
     if (identifyMatch(highJack = true)) {
       isValid = true
+      level.decreaseMove()
       resetSelection()
     }
     Thread.sleep(300)
@@ -281,8 +291,12 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     display.drawFillRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
     display.setColor(Color.BLACK)
     display.drawRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50 , s"Objective: ${level.goal}", Color.BLACK, 22)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin , s"${level.score}", Color.BLACK, 22)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, 22)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin, s"${level.score}", Color.BLACK, 22)
+    display.setColor(Color.WHITE)
+    display.drawFillRect(margin, display.getFrameHeight() - margin - height, width, height)
+    display.drawString(margin, display.getFrameHeight() - margin, s"Moves left: ${level.movesLeft}", Color.BLACK, 22)
+    display.drawString(10, 20, s"Level: ${level.level}", Color.BLACK, 22)
   }
 
   //highJack argument is used to only know if there is at least one match. To save perf.
@@ -305,7 +319,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               for (k <- 0 to matchCount) {
                 box(i)(j - k).isPartOfMatch = true
                 box(i)(j - k).display = false
-                level.score += matchCount * 10
+                level.increaseScore(10)
               }
             }
           }
@@ -335,6 +349,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               for (k <- 0 to matchCount) {
                 box(i - k)(j).isPartOfMatch = true
                 box(i - k)(j).display = false
+                level.increaseScore(10)
               }
             }
 
@@ -412,17 +427,30 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def nextLevel(): Unit = {
-    if (level.score == level.goal) {
-      currentLevel += 1
-      level.increaseGoal(currentLevel)
-      level.decreaseMove(currentLevel)
-      level.resetScore()
+    if (level.isLevelFinished()) {
+      if (level.goalReached()) {
+        currentLevel += 1
+        level = new Scoring(currentLevel)
+        display.setColor(Color.WHITE)
+        display.drawFillRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+        display.setColor(Color.BLACK)
+        display.drawRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage, Color.BLACK, 12)
+        Thread.sleep(2000)
+      }
+      else{
+        display.setColor(Color.WHITE)
+        display.drawFillRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+        display.setColor(Color.BLACK)
+        display.drawRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage, Color.BLACK, 12)
+        Thread.sleep(2000)
+      }
+      if (!level.endGame()) {
+        start(true)
+      }
     }
   }
 
-  def endGame(): Unit = {
-    if (currentLevel == 5) {
-      println("Congratulation, you beat the game")
-    }
-  }
+
 }
