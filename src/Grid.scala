@@ -22,21 +22,24 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val margin: Int = 40
   val caseWidth: Int = (width - margin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
-  val possibilities: Array[String] = Array("/res/blue.png", "/res/green.png", "/res/purple.png", "/res/red.png", "/res/yellow.png")
+  val possibilities: Array[String] = Array("/original/bug_big_eyes.png", "/original/bug_big_nose_blue.png", "/original/bug_eyes.png", "/original/bug_green.png", "/original/bug_smile.png")
   var select1: Position = new Position()
   var select2: Position = new Position()
   var currentLevel: Int = 1
   var level = new Scoring(currentLevel) // 1 needs to be an incremented var
+  var totalScore = 0
 
 
-  def start(restart: Boolean = false, pregame: Boolean = false):Unit = {
-    if (restart) {
-      display.clear()
+  def start(restart: Boolean = false, pregame: Boolean = false): Unit = {
+    display.frontBuffer.synchronized {
+
+      if (restart) {
+        display.clear()
+      }
+      initializeElements()
+      resolveGrid(pregame)
+      drawElements()
     }
-    initializeElements()
-    //drawElements()
-    resolveGrid(pregame)
-    drawElements()
   }
 
   def randomElement(arr: Array[String]): String = {
@@ -159,7 +162,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     var isRunning: Boolean = false
     do {
       if (!pregame) {
-        Thread.sleep(150)
+        Thread.sleep(100)
 
       }
       isRunning = cascadingElement()
@@ -171,18 +174,15 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def explodeElements(): Unit = {
-    //display.clear()
 
     var increment = 0
     do {
       //display.clear()
       drawElements(animation = true, increment)
-      Thread.sleep(100)
+      Thread.sleep(50)
       increment += 1
     }
     while (increment < 15)
-
-    //clean()
   }
 
   def isThereAPossibleMove(): Boolean = {
@@ -278,7 +278,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       level.decreaseMove()
       resetSelection()
     }
-    Thread.sleep(300)
+    Thread.sleep(200)
     isValid
   }
 
@@ -358,8 +358,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def clean(): Unit = {
-    display.clear()
-    drawElements()
+    display.frontBuffer.synchronized {
+      display.clear()
+      drawElements()
+    }
   }
 
   def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
@@ -374,13 +376,17 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
           jCount = 0
           for (j <- margin to boxWidth by caseWidth) {
             if (box(iCount)(jCount).display) {
-              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
+              //display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
+              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
-              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
+              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0.2, 0.2, box(iCount)(jCount).bitmap)
+            }
+            else if (animation && !box(iCount)(jCount).display) {
+              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, -0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else {
-              display.drawTransformedPicture(i + caseWidth, j + caseWidth,0,0, new GraphicsBitmap("/res/dirt.png"))
+              display.drawTransformedPicture(i + caseWidth, j + caseWidth, 0, 0, new GraphicsBitmap("/res/dirt.png"))
             }
             jCount += 1
           }
@@ -407,6 +413,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     display.drawFillRect(margin, display.getFrameHeight() - margin - height, width, height)
     display.drawString(margin, display.getFrameHeight() - margin, s"Moves left: ${level.movesLeft}", Color.BLACK, 22)
     display.drawString(10, 20, s"Level: ${level.level}", Color.BLACK, 22)
+  }
+
+  def drawUI(): Unit = {
+    var background = new GraphicsBitmap("/res/grass.jpg")
+    display.drawTransformedPicture(0, 0, 0, 1, background)
   }
 
   def resetSelection(): Unit = {
@@ -464,11 +475,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         start(restart = true, pregame = true)
       }
     }
-  }
-
-  def drawUI(): Unit = {
-    var background = new GraphicsBitmap("/res/grass.jpg")
-    display.drawTransformedPicture(0,0,0,1, background)
   }
 
 

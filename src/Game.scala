@@ -5,8 +5,8 @@ import java.awt.event.{MouseEvent, MouseListener}
 object Game extends App {
   val width: Int = 600
   val height: Int = 800
-  val nbOfElement: Int = 9
-  val display: FunGraphics = new FunGraphics(width, height, 0, 0, "Bugs crasher", true)
+  val nbOfElement: Int = 8
+  val display: FunGraphics = new FunGraphics(width, height, 450, 0, "Bugs crasher", true)
   var game: Grid = new Grid(width, height, nbOfElement, display)
 
   game.start(pregame = true)
