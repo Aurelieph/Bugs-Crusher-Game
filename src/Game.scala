@@ -2,7 +2,7 @@ import hevs.graphics.FunGraphics
 
 import java.awt.event.{MouseEvent, MouseListener}
 
-object Base extends App {
+object Game extends App {
   val width: Int = 600
   val height: Int = 800
   val nbOfElement: Int = 9

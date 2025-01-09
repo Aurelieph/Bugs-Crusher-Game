@@ -3,13 +3,6 @@ class Scoring(var level:Int) {
   var goal:Int = 10000
   var movesLeft = 3 - level
 
-//  def resetScore(): Unit = {
-//    score = 0
-//  }
-//  def increaseGoal(newLevel: Int): Unit = {
-//    goal = newLevel * 100
-//  }
-
   def decreaseMove(): Unit = {
     movesLeft -= 1
   }
