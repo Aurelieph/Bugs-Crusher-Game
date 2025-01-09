@@ -9,7 +9,7 @@ object Game extends App {
   val display: FunGraphics = new FunGraphics(width, height, 0, 0, "Bugs crasher", true)
   var game: Grid = new Grid(width, height, nbOfElement, display)
 
-  game.start()
+  game.start(pregame = true)
 
 
 

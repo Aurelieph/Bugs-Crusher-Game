@@ -29,14 +29,14 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   var level = new Scoring(currentLevel) // 1 needs to be an incremented var
 
 
-  def start(restart: Boolean = false) = {
+  def start(restart: Boolean = false, pregame: Boolean = false):Unit = {
     if (restart) {
       display.clear()
     }
     initializeElements()
+    //drawElements()
+    resolveGrid(pregame)
     drawElements()
-    resolveGrid()
-    isThereAPossibleMove()
   }
 
   def randomElement(arr: Array[String]): String = {
@@ -52,13 +52,15 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
-  def resolveGrid(): Unit = {
+  def resolveGrid(pregame: Boolean = false): Unit = {
     // Resolve matches until no more are found
     def resolveMatches(): Unit = {
-      while (identifyMatch()) {
+      while (identifyMatch(highJack = false, pregame)) {
         identifyVerticalMoves()
-        explodeElements()
-        resolveCascading()
+        if (!pregame) {
+          explodeElements()
+        }
+        resolveCascading(pregame)
         displayScoring()
       }
     }
@@ -70,107 +72,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       shuffle()
       resolveMatches()
     }
-  }
-
-  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
-    displayScoring()
-    var iCount = 0
-    var jCount = 0
-    try {
-      display.frontBuffer.synchronized {
-        for (i <- margin to boxWidth by caseWidth) {
-          jCount = 0
-          for (j <- margin to boxWidth by caseWidth) {
-            if (box(iCount)(jCount).display) {
-              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
-            }
-            else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
-              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
-            }
-            else {
-              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, new GraphicsBitmap("/res/white.png"))
-            }
-            jCount += 1
-          }
-          iCount += 1
-        }
-      }
-    }
-    catch {
-      case e: Exception => println("drawElements: ", e.printStackTrace())
-    }
-
-  }
-
-  //highJack argument is used to only know if there is at least one match. To save perf.
-  def identifyMatch(highJack: Boolean = false): Boolean = {
-    val impossibleValue = "99"
-    var lastMatch: String = impossibleValue
-    var matchCount: Int = 0
-    var isMatch: Boolean = false
-    try {
-      //go through vertically
-      for (i <- box.indices) {
-        for (j <- box(i).indices) {
-          if (box(i)(j).value == lastMatch) {
-            matchCount += 1
-            if (matchCount >= 2) {
-              if (highJack) {
-                return true
-              }
-              isMatch = true
-              for (k <- 0 to matchCount) {
-                box(i)(j - k).isPartOfMatch = true
-                box(i)(j - k).display = false
-                level.increaseScore(10)
-              }
-            }
-          }
-          else {
-            matchCount = 0
-            lastMatch = box(i)(j).value
-
-          }
-        }
-        lastMatch = impossibleValue
-        matchCount = 0
-      }
-    }
-    //check horizontally
-    try {
-      matchCount = 0
-      lastMatch = impossibleValue
-      for (j <- box.indices) {
-        for (i <- box(j).indices) {
-          if (box(i)(j).value == lastMatch) {
-            matchCount += 1
-            if (matchCount >= 2) {
-              if (highJack) {
-                return true
-              }
-              isMatch = true
-              for (k <- 0 to matchCount) {
-                box(i - k)(j).isPartOfMatch = true
-                box(i - k)(j).display = false
-                level.increaseScore(10)
-              }
-            }
-
-          }
-          else {
-            matchCount = 0
-            lastMatch = box(i)(j).value
-
-          }
-        }
-        lastMatch = impossibleValue
-        matchCount = 0
-      }
-    }
-    catch {
-      case e: Exception => println("identifyMatch: ", e.printStackTrace())
-    }
-    isMatch
   }
 
   // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
@@ -254,13 +155,17 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isCascading
   }
 
-  def resolveCascading(): Unit = {
+  def resolveCascading(pregame: Boolean = false): Unit = {
     var isRunning: Boolean = false
     do {
-      Thread.sleep(150)
-      isRunning = cascadingElement()
-      drawElements()
+      if (!pregame) {
+        Thread.sleep(150)
 
+      }
+      isRunning = cascadingElement()
+      if (!pregame) {
+        drawElements()
+      }
     }
     while (isRunning)
   }
@@ -310,12 +215,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     false
   }
 
-  def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
-    !(position.x == x && position.y == y) &&
-      (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
-        (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
-  }
-
   def select(x: Int, y: Int): Boolean = {
     var areThereTwoSelections = false
     val cellX: Int = x * caseWidth + margin
@@ -349,9 +248,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     areThereTwoSelections
   }
 
-  def resetSelection(): Unit = {
-    select1 = new Position()
-    select2 = new Position()
+  def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
+    !(position.x == x && position.y == y) &&
+      (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
+        (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
   }
 
   def drawSelection(x: Int, y: Int, color: Color = Color.blue): Unit = {
@@ -382,9 +282,134 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isValid
   }
 
+  //highJack argument is used to only know if there is at least one match. To save perf.
+  def identifyMatch(highJack: Boolean = false, pregame: Boolean = false): Boolean = {
+    val impossibleValue = "99"
+    var lastMatch: String = impossibleValue
+    var matchCount: Int = 0
+    var isMatch: Boolean = false
+    try {
+      //go through vertically
+      for (i <- box.indices) {
+        for (j <- box(i).indices) {
+          if (box(i)(j).value == lastMatch) {
+            matchCount += 1
+            if (matchCount >= 2) {
+              if (highJack) {
+                return true
+              }
+              isMatch = true
+              for (k <- 0 to matchCount) {
+                box(i)(j - k).isPartOfMatch = true
+                box(i)(j - k).display = false
+                if (!pregame) {
+                  level.increaseScore(10)
+                }
+              }
+            }
+          }
+          else {
+            matchCount = 0
+            lastMatch = box(i)(j).value
+
+          }
+        }
+        lastMatch = impossibleValue
+        matchCount = 0
+      }
+    }
+    //check horizontally
+    try {
+      matchCount = 0
+      lastMatch = impossibleValue
+      for (j <- box.indices) {
+        for (i <- box(j).indices) {
+          if (box(i)(j).value == lastMatch) {
+            matchCount += 1
+            if (matchCount >= 2) {
+              if (highJack) {
+                return true
+              }
+              isMatch = true
+              for (k <- 0 to matchCount) {
+                box(i - k)(j).isPartOfMatch = true
+                box(i - k)(j).display = false
+                if (!pregame) {
+                  level.increaseScore(10)
+                }
+              }
+            }
+
+          }
+          else {
+            matchCount = 0
+            lastMatch = box(i)(j).value
+
+          }
+        }
+        lastMatch = impossibleValue
+        matchCount = 0
+      }
+    }
+    catch {
+      case e: Exception => println("identifyMatch: ", e.printStackTrace())
+    }
+    isMatch
+  }
+
   def clean(): Unit = {
     display.clear()
     drawElements()
+  }
+
+  def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
+    displayScoring()
+    var iCount = 0
+    var jCount = 0
+    try {
+      display.frontBuffer.synchronized {
+        for (i <- margin to boxWidth by caseWidth) {
+          jCount = 0
+          for (j <- margin to boxWidth by caseWidth) {
+            if (box(iCount)(jCount).display) {
+              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
+            }
+            else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
+              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
+            }
+            else {
+              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, new GraphicsBitmap("/res/white.png"))
+            }
+            jCount += 1
+          }
+          iCount += 1
+        }
+      }
+    }
+    catch {
+      case e: Exception => println("drawElements: ", e.printStackTrace())
+    }
+
+  }
+
+  def displayScoring(): Unit = {
+    val height: Int = 40
+    val width: Int = 140
+    display.setColor(Color.WHITE)
+    display.drawFillRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
+    display.setColor(Color.BLACK)
+    display.drawRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, 22)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin, s"${level.score}", Color.BLACK, 22)
+    display.setColor(Color.WHITE)
+    display.drawFillRect(margin, display.getFrameHeight() - margin - height, width, height)
+    display.drawString(margin, display.getFrameHeight() - margin, s"Moves left: ${level.movesLeft}", Color.BLACK, 22)
+    display.drawString(10, 20, s"Level: ${level.level}", Color.BLACK, 22)
+  }
+
+  def resetSelection(): Unit = {
+    select1 = new Position()
+    select2 = new Position()
   }
 
   def shuffle(): Unit = {
@@ -413,21 +438,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     clean()
   }
 
-  def displayScoring(): Unit = {
-    val height: Int = 40
-    val width: Int = 140
-    display.setColor(Color.WHITE)
-    display.drawFillRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
-    display.setColor(Color.BLACK)
-    display.drawRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, 22)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin, s"${level.score}", Color.BLACK, 22)
-    display.setColor(Color.WHITE)
-    display.drawFillRect(margin, display.getFrameHeight() - margin - height, width, height)
-    display.drawString(margin, display.getFrameHeight() - margin, s"Moves left: ${level.movesLeft}", Color.BLACK, 22)
-    display.drawString(10, 20, s"Level: ${level.level}", Color.BLACK, 22)
-  }
-
   def nextLevel(): Unit = {
     if (level.isLevelFinished()) {
       if (level.goalReached()) {
@@ -449,7 +459,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         Thread.sleep(2000)
       }
       if (!level.endGame()) {
-        start(true)
+        start(restart = true, pregame = true)
       }
     }
   }
