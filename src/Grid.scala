@@ -363,11 +363,13 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
-    displayScoring()
     var iCount = 0
     var jCount = 0
     try {
       display.frontBuffer.synchronized {
+        drawUI()
+        displayScoring()
+
         for (i <- margin to boxWidth by caseWidth) {
           jCount = 0
           for (j <- margin to boxWidth by caseWidth) {
@@ -378,7 +380,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
             }
             else {
-              display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, new GraphicsBitmap("/res/white.png"))
+              display.drawTransformedPicture(i + caseWidth, j + caseWidth,0,0, new GraphicsBitmap("/res/dirt.png"))
             }
             jCount += 1
           }
@@ -462,6 +464,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         start(restart = true, pregame = true)
       }
     }
+  }
+
+  def drawUI(): Unit = {
+    var background = new GraphicsBitmap("/res/grass.jpg")
+    display.drawTransformedPicture(0,0,0,1, background)
   }
 
 

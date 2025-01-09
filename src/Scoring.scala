@@ -1,7 +1,7 @@
 class Scoring(var level:Int) {
   var score:Int = 0
   var goal:Int = 1000
-  var movesLeft = 3 - level
+  var movesLeft = 11 - level
 
   def decreaseMove(): Unit = {
     movesLeft -= 1
