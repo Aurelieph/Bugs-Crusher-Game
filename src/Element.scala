@@ -14,7 +14,6 @@ class Element(var value: String) {
     bitmap = new GraphicsBitmap(value)
   }
 
-
   def copy(): Element = {
     val newElement = new Element(value)
     newElement.isPartOfMatch = this.isPartOfMatch
@@ -24,9 +23,5 @@ class Element(var value: String) {
     newElement.toGenerate = this.toGenerate
     newElement
   }
-
-
-
-
 
 }

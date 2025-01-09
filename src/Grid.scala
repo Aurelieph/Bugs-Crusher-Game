@@ -28,15 +28,21 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   var currentLevel: Int = 1
   var level = new Scoring(currentLevel) // 1 needs to be an incremented var
 
-def start(restart:Boolean=false)={
-  if(restart){
-    display.clear()
+
+  def start(restart: Boolean = false) = {
+    if (restart) {
+      display.clear()
+    }
+    initializeElements()
+    drawElements()
+    resolveGrid()
+    isThereAPossibleMove()
   }
-  initializeElements()
-  drawElements()
-  resolveGrid()
-  isThereAPossibleMove()
-}
+
+  def randomElement(arr: Array[String]): String = {
+    arr(Random.nextInt(arr.length))
+  }
+
   def initializeElements(): Unit = {
     for (i <- box.indices) {
       for (j <- box(i).indices) {
@@ -44,10 +50,6 @@ def start(restart:Boolean=false)={
 
       }
     }
-  }
-
-  def randomElement(arr: Array[String]): String = {
-    arr(Random.nextInt(arr.length))
   }
 
   def resolveGrid(): Unit = {
@@ -68,190 +70,6 @@ def start(restart:Boolean=false)={
       shuffle()
       resolveMatches()
     }
-  }
-
-  // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
-  def identifyVerticalMoves(): Unit = {
-    try {
-      for (i <- box.indices) {
-        for (j <- box(i).indices) {
-          if (j == 0) {
-            if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
-              box(i)(nbOfElement - j - 1).countVerticalMoves = 1
-            }
-          }
-          else if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
-            box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves + 1
-          }
-          else {
-            box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves
-          }
-        }
-      }
-    }
-    catch {
-      case e: Exception => println("identifyVerticalMoves: ", e.printStackTrace())
-    }
-  }
-
-  def resolveCascading(): Unit = {
-    var isRunning: Boolean = false
-    do {
-      Thread.sleep(150)
-      isRunning = cascadingElement()
-      drawElements()
-
-    }
-    while (isRunning)
-  }
-
-  def cascadingElement(): Boolean = {
-    var isCascading = false
-    //update new positions by counting how many space the element will need to drop
-    //Change toMove field to true if the element hasn't been destroyed.
-    try {
-      for (i <- box.indices) {
-        for (j <- box(i).indices) {
-          if (box(i)(j).countVerticalMoves > 0) {
-            box(i)(j).countVerticalMoves -= 1
-            if (!box(i)(j).isPartOfMatch) {
-              box(i)(j).toMove = true
-            }
-            // check remove condition
-            if (box(i)(j).countVerticalMoves > 0) {
-              isCascading = true
-            }
-
-          }
-        }
-      }
-      //place element at the right position, starting from the bottom
-      for (i <- box.indices) {
-        for (j: Int <- box(i).indices) {
-          if (box(i)(nbOfElement - j - 1).toMove) {
-
-            box(i)(nbOfElement - j - 1).toMove = false
-            box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1).copy()
-            box(i)(nbOfElement - j - 1).display = false
-            if (nbOfElement - j - 1 == 0) {
-              box(i)(nbOfElement - j - 1).toGenerate = true
-            }
-
-          }
-          if (nbOfElement - j - 1 == 0 && !box(i)(nbOfElement - j - 1).display) {
-            box(i)(nbOfElement - j - 1).toGenerate = true
-          }
-        }
-      }
-
-      for (i <- box.indices) {
-        for (j: Int <- box(i).indices) {
-          if (box(i)(j).toGenerate) {
-            val file: String = randomElement(possibilities)
-            box(i)(j).updateValue(file)
-            box(i)(j).toGenerate = false
-            box(i)(j).isPartOfMatch = false
-            box(i)(j).display = true
-          }
-        }
-      }
-    }
-    catch {
-      case e: Exception => println("cascadingElement: ", e.printStackTrace())
-    }
-    isCascading
-  }
-
-  def explodeElements(): Unit = {
-    //display.clear()
-
-    var increment = 0
-    do {
-      //display.clear()
-      drawElements(animation = true, increment)
-      Thread.sleep(100)
-      increment += 1
-    }
-    while (increment < 15)
-
-    //clean()
-  }
-
-  def select(x: Int, y: Int): Boolean = {
-    var areThereTwoSelections = false
-    val cellX: Int = x * caseWidth + margin
-    val cellY: Int = y * caseWidth + margin
-    // reinitialise if there is a weird combination
-    if (select1.x == -1 || select1.y == -1) {
-      resetSelection()
-    }
-    else if (!select2.isEmpty() && (select2.x == -1 || select2.y == -1)) {
-      select2 = new Position()
-    }
-
-    // check which variable need to be assigned
-
-    if (select1.isEmpty() && x < nbOfElement && y < nbOfElement) {
-      select1 = new Position(x, y)
-      drawSelection(cellX, cellY)
-    }
-    else if (!select1.isEmpty() && select2.isEmpty() && isNeighbour(select1, x, y) && x < nbOfElement && y < nbOfElement) {
-      select2 = new Position(x, y)
-      areThereTwoSelections = true
-
-    }
-
-    else {
-      select1 = new Position()
-      select2 = new Position()
-      clean()
-    }
-
-    areThereTwoSelections
-  }
-
-  def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
-    !(position.x == x && position.y == y) &&
-      (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
-        (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
-  }
-
-  def drawSelection(x: Int, y: Int, color: Color = Color.blue): Unit = {
-    display.setColor(color)
-    display.drawCircle(x, y, caseWidth)
-  }
-
-  def rollBack(): Boolean = {
-    switchPosition()
-    resetSelection()
-    false
-
-  }
-
-  def switchPosition(): Boolean = {
-    var isValid: Boolean = false
-
-    val temp: Element = box(select1.x)(select1.y)
-    box(select1.x)(select1.y) = box(select2.x)(select2.y).copy()
-    box(select2.x)(select2.y) = temp
-    clean()
-    if (identifyMatch(highJack = true)) {
-      isValid = true
-      level.decreaseMove()
-      resetSelection()
-    }
-    Thread.sleep(300)
-    isValid
-  }
-
-  def resetSelection(): Unit = {
-    select1 = new Position()
-    select2 = new Position()
-  }
-
-  def clean(): Unit = {
-    display.clear()
-    drawElements()
   }
 
   def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
@@ -282,21 +100,6 @@ def start(restart:Boolean=false)={
       case e: Exception => println("drawElements: ", e.printStackTrace())
     }
 
-  }
-
-  def displayScoring(): Unit = {
-    val height: Int = 40
-    val width: Int = 140
-    display.setColor(Color.WHITE)
-    display.drawFillRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
-    display.setColor(Color.BLACK)
-    display.drawRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, 22)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin, s"${level.score}", Color.BLACK, 22)
-    display.setColor(Color.WHITE)
-    display.drawFillRect(margin, display.getFrameHeight() - margin - height, width, height)
-    display.drawString(margin, display.getFrameHeight() - margin, s"Moves left: ${level.movesLeft}", Color.BLACK, 22)
-    display.drawString(10, 20, s"Level: ${level.level}", Color.BLACK, 22)
   }
 
   //highJack argument is used to only know if there is at least one match. To save perf.
@@ -370,6 +173,113 @@ def start(restart:Boolean=false)={
     isMatch
   }
 
+  // Update the countVerticalMoves value to indicate how many positions each element will drop down after the matches.
+  def identifyVerticalMoves(): Unit = {
+    try {
+      for (i <- box.indices) {
+        for (j <- box(i).indices) {
+          if (j == 0) {
+            if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
+              box(i)(nbOfElement - j - 1).countVerticalMoves = 1
+            }
+          }
+          else if (box(i)(nbOfElement - j - 1).isPartOfMatch) {
+            box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves + 1
+          }
+          else {
+            box(i)(nbOfElement - j - 1).countVerticalMoves = box(i)(nbOfElement - j).countVerticalMoves
+          }
+        }
+      }
+    }
+    catch {
+      case e: Exception => println("identifyVerticalMoves: ", e.printStackTrace())
+    }
+  }
+
+  def cascadingElement(): Boolean = {
+    var isCascading = false
+    //update new positions by counting how many space the element will need to drop
+    //Change toMove field to true if the element hasn't been destroyed.
+    try {
+      for (i <- box.indices) {
+        for (j <- box(i).indices) {
+          if (box(i)(j).countVerticalMoves > 0) {
+            box(i)(j).countVerticalMoves -= 1
+            if (!box(i)(j).isPartOfMatch) {
+              box(i)(j).toMove = true
+            }
+            // check remove condition
+            if (box(i)(j).countVerticalMoves > 0) {
+              isCascading = true
+            }
+
+          }
+        }
+      }
+      //place element at the right position, starting from the bottom
+      for (i <- box.indices) {
+        for (j: Int <- box(i).indices) {
+          if (box(i)(nbOfElement - j - 1).toMove) {
+
+            box(i)(nbOfElement - j - 1).toMove = false
+            box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1).copy()
+            box(i)(nbOfElement - j - 1).display = false
+            if (nbOfElement - j - 1 == 0) {
+              box(i)(nbOfElement - j - 1).toGenerate = true
+            }
+
+          }
+          if (nbOfElement - j - 1 == 0 && !box(i)(nbOfElement - j - 1).display) {
+            box(i)(nbOfElement - j - 1).toGenerate = true
+          }
+        }
+      }
+
+      for (i <- box.indices) {
+        for (j: Int <- box(i).indices) {
+          if (box(i)(j).toGenerate) {
+            val file: String = randomElement(possibilities)
+            box(i)(j).updateValue(file)
+            box(i)(j).toGenerate = false
+            box(i)(j).isPartOfMatch = false
+            box(i)(j).display = true
+          }
+        }
+      }
+    }
+    catch {
+      case e: Exception => println("cascadingElement: ", e.printStackTrace())
+    }
+    isCascading
+  }
+
+  def resolveCascading(): Unit = {
+    var isRunning: Boolean = false
+    do {
+      Thread.sleep(150)
+      isRunning = cascadingElement()
+      drawElements()
+
+    }
+    while (isRunning)
+  }
+
+  def explodeElements(): Unit = {
+    //display.clear()
+
+    var increment = 0
+    do {
+      //display.clear()
+      drawElements(animation = true, increment)
+      Thread.sleep(100)
+      increment += 1
+    }
+    while (increment < 15)
+
+    //clean()
+  }
+
   def isThereAPossibleMove(): Boolean = {
 
     for (i <- 0 until box.length - 1) {
@@ -400,6 +310,83 @@ def start(restart:Boolean=false)={
     false
   }
 
+  def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
+    !(position.x == x && position.y == y) &&
+      (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
+        (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
+  }
+
+  def select(x: Int, y: Int): Boolean = {
+    var areThereTwoSelections = false
+    val cellX: Int = x * caseWidth + margin
+    val cellY: Int = y * caseWidth + margin
+    // reinitialise if there is a weird combination
+    if (select1.x == -1 || select1.y == -1) {
+      resetSelection()
+    }
+    else if (!select2.isEmpty() && (select2.x == -1 || select2.y == -1)) {
+      select2 = new Position()
+    }
+
+    // check which variable need to be assigned
+
+    if (select1.isEmpty() && x < nbOfElement && y < nbOfElement) {
+      select1 = new Position(x, y)
+      drawSelection(cellX, cellY)
+    }
+    else if (!select1.isEmpty() && select2.isEmpty() && isNeighbour(select1, x, y) && x < nbOfElement && y < nbOfElement) {
+      select2 = new Position(x, y)
+      areThereTwoSelections = true
+
+    }
+
+    else {
+      select1 = new Position()
+      select2 = new Position()
+      clean()
+    }
+
+    areThereTwoSelections
+  }
+
+  def resetSelection(): Unit = {
+    select1 = new Position()
+    select2 = new Position()
+  }
+
+  def drawSelection(x: Int, y: Int, color: Color = Color.blue): Unit = {
+    display.setColor(color)
+    display.drawCircle(x, y, caseWidth)
+  }
+
+  def rollBack(): Boolean = {
+    switchPosition()
+    resetSelection()
+    false
+
+  }
+
+  def switchPosition(): Boolean = {
+    var isValid: Boolean = false
+
+    val temp: Element = box(select1.x)(select1.y)
+    box(select1.x)(select1.y) = box(select2.x)(select2.y).copy()
+    box(select2.x)(select2.y) = temp
+    clean()
+    if (identifyMatch(highJack = true)) {
+      isValid = true
+      level.decreaseMove()
+      resetSelection()
+    }
+    Thread.sleep(300)
+    isValid
+  }
+
+  def clean(): Unit = {
+    display.clear()
+    drawElements()
+  }
+
   def shuffle(): Unit = {
 
     val tempArray: Array[Array[Element]] = Array.ofDim(nbOfElement, nbOfElement)
@@ -426,6 +413,21 @@ def start(restart:Boolean=false)={
     clean()
   }
 
+  def displayScoring(): Unit = {
+    val height: Int = 40
+    val width: Int = 140
+    display.setColor(Color.WHITE)
+    display.drawFillRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
+    display.setColor(Color.BLACK)
+    display.drawRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, 22)
+    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin, s"${level.score}", Color.BLACK, 22)
+    display.setColor(Color.WHITE)
+    display.drawFillRect(margin, display.getFrameHeight() - margin - height, width, height)
+    display.drawString(margin, display.getFrameHeight() - margin, s"Moves left: ${level.movesLeft}", Color.BLACK, 22)
+    display.drawString(10, 20, s"Level: ${level.level}", Color.BLACK, 22)
+  }
+
   def nextLevel(): Unit = {
     if (level.isLevelFinished()) {
       if (level.goalReached()) {
@@ -435,15 +437,15 @@ def start(restart:Boolean=false)={
         display.drawFillRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
         display.setColor(Color.BLACK)
         display.drawRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
-        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage, Color.BLACK, 12)
+        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage(), Color.BLACK, 12)
         Thread.sleep(2000)
       }
-      else{
+      else {
         display.setColor(Color.WHITE)
         display.drawFillRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
         display.setColor(Color.BLACK)
         display.drawRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
-        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage, Color.BLACK, 12)
+        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage(), Color.BLACK, 12)
         Thread.sleep(2000)
       }
       if (!level.endGame()) {
