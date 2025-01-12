@@ -26,7 +26,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   var select1: Position = new Position()
   var select2: Position = new Position()
   var currentLevel: Int = 1
-  var level = new Scoring(currentLevel) // 1 needs to be an incremented var
+  var level = new Scoring(currentLevel)
   var totalScore = 0
 
 
@@ -218,7 +218,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def select(x: Int, y: Int): Boolean = {
     var areThereTwoSelections = false
     val cellX: Int = x * caseWidth + margin
-    val cellY: Int = y * caseWidth + margin
+    val cellY: Int = y * caseWidth + 2*margin
     // reinitialise if there is a weird combination
     if (select1.x == -1 || select1.y == -1) {
       resetSelection()
@@ -254,7 +254,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
   }
 
-  def drawSelection(x: Int, y: Int, color: Color = Color.blue): Unit = {
+  def drawSelection(x: Int, y: Int, color: Color = Color.red): Unit = {
     display.setColor(color)
     display.drawCircle(x, y, caseWidth)
   }
@@ -374,7 +374,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
         for (i <- margin to boxWidth by caseWidth) {
           jCount = 0
-          for (j <- margin to boxWidth by caseWidth) {
+          for (j <- 2*margin to boxWidth+margin by caseWidth) {
             if (box(iCount)(jCount).display) {
               //display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
               display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
@@ -386,7 +386,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, -0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else {
-              display.drawTransformedPicture(i + caseWidth, j + caseWidth, 0, 0, new GraphicsBitmap("/res/dirt.png"))
+              //display.drawTransformedPicture(i, j, 0, 0, new GraphicsBitmap("/res/dirt.png"))
             }
             jCount += 1
           }
@@ -401,23 +401,39 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def displayScoring(): Unit = {
-    val height: Int = 40
     val width: Int = 140
+    val fontSize: Int = 24
+    val offset: Int = 10
+
+    //display level
     display.setColor(Color.WHITE)
-    display.drawFillRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
-    display.setColor(Color.BLACK)
-    display.drawRect(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - height, width, height)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, 22)
-    display.drawString(display.getFrameWidth() / 2 - width / 2, display.getFrameHeight() - margin, s"${level.score}", Color.BLACK, 22)
+    display.drawFillRect(display.getFrameWidth() / 2 - (margin/2), 10, margin, margin)
+    display.drawString(display.getFrameWidth() / 2 -(margin/2) +offset, 10 +margin -offset, s"${level.level}", Color.BLACK, fontSize)
+
+    //display target and score
     display.setColor(Color.WHITE)
-    display.drawFillRect(margin, display.getFrameHeight() - margin - height, width, height)
-    display.drawString(margin, display.getFrameHeight() - margin, s"Moves left: ${level.movesLeft}", Color.BLACK, 22)
-    display.drawString(10, 20, s"Level: ${level.level}", Color.BLACK, 22)
+    display.drawFillRect(display.getFrameWidth() - width - margin, display.getFrameHeight() - 2*margin, width, margin)
+    display.drawString(display.getFrameWidth() - width - margin, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, fontSize)
+    display.drawString(display.getFrameWidth() - width - margin +(width/2 -offset), display.getFrameHeight() - margin - offset, s"${level.score}", Color.BLACK, fontSize)
+
+    //display moves
+    display.setColor(Color.WHITE)
+    display.drawFillRect(margin, display.getFrameHeight() - 2*margin, width, margin)
+    display.drawString(margin, display.getFrameHeight() - margin - 50, "Moves left:", Color.BLACK, fontSize)
+    display.drawString(margin +(width/2 -offset), display.getFrameHeight() - margin - offset, s"${level.movesLeft}", Color.BLACK, fontSize)
   }
 
   def drawUI(): Unit = {
     var background = new GraphicsBitmap("/res/grass.jpg")
+    var gridBG = new GraphicsBitmap("/res/dirt(perf).png")
     display.drawTransformedPicture(0, 0, 0, 1, background)
+
+//    for (i <- margin to boxWidth by caseWidth) {
+//      for (j <- margin to boxWidth by caseWidth) {
+//        display.drawTransformedPicture(i, j, 0, 0, gridBG)
+//      }
+//    }
+    display.drawPicture(display.getFrameWidth()/2, display.getFrameWidth()/2 + margin, gridBG)
   }
 
   def resetSelection(): Unit = {
@@ -453,22 +469,22 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   def nextLevel(): Unit = {
     if (level.isLevelFinished()) {
-      if (level.goalReached()) {
+      if (level.goalReached() || (level.goalReached() && level.endGame())) {
         currentLevel += 1
         level = new Scoring(currentLevel)
         display.setColor(Color.WHITE)
-        display.drawFillRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+        display.drawFillRect(display.getFrameWidth() / 2 - (200/2), display.getFrameWidth() / 2 - 20, 200, 60)
         display.setColor(Color.BLACK)
-        display.drawRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
-        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage(), Color.BLACK, 12)
+        display.drawRect(display.getFrameWidth() / 2 - (200/2), display.getFrameWidth() / 2 - 20, 200, 60)
+        display.drawString(display.getFrameWidth() / 2 - (200/2) + 30, display.getFrameWidth() / 2 +20, level.endMessage(), Color.BLACK, 24)
         Thread.sleep(2000)
       }
       else {
         display.setColor(Color.WHITE)
-        display.drawFillRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
+        display.drawFillRect(display.getFrameWidth() / 2 - (240/2), display.getFrameWidth() / 2 - 20, 240, 60)
         display.setColor(Color.BLACK)
-        display.drawRect(display.getFrameWidth() / 2 - 52, display.getFrameWidth() / 2 - 20, 100, 40)
-        display.drawString(display.getFrameWidth() / 2 - 28, display.getFrameWidth() / 2 + 4, level.endMessage(), Color.BLACK, 12)
+        display.drawRect(display.getFrameWidth() / 2 - (240/2), display.getFrameWidth() / 2 - 20, 240, 60)
+        display.drawString(display.getFrameWidth() / 2 - (240/2) + 20, display.getFrameWidth() / 2 +20, level.endMessage(), Color.BLACK, 24)
         Thread.sleep(2000)
       }
       if (!level.endGame()) {

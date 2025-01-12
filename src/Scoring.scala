@@ -17,12 +17,12 @@ class Scoring(var level:Int) {
 
   def endMessage(): String = {
     if (level == 5) {
-      return "Congratulation, you beat the game :D"
+      return "Congratulation!\nYou beat the game :D"
     }
     if (movesLeft <= 0 && !goalReached()){
       return "Too bad, you lost :("
     }
-    "New Level!"
+    "NEW LEVEL!"
   }
 
   def isLevelFinished(): Boolean = {
