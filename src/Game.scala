@@ -20,8 +20,8 @@ object Game extends App {
     override def mousePressed(e: MouseEvent): Unit = {
       val clickX = e.getX
       val clickY = e.getY
-      val caseNumberX = (clickX - game.margin) / game.caseWidth
-      val caseNumberY = (clickY - game.margin) / game.caseWidth
+      val caseNumberX = (clickX - game.leftMargin) / game.caseWidth
+      val caseNumberY = (clickY - game.topMargin) / game.caseWidth
 
       if (game.select(caseNumberX, caseNumberY)) {
         if (game.switchPosition()) {

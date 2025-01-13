@@ -19,8 +19,9 @@ class Position(var x: Int, var y: Int) {
 
 class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: FunGraphics) {
   val box: Array[Array[Element]] = Array.ofDim(nbOfElement, nbOfElement)
-  val margin: Int = 40
-  val caseWidth: Int = (width - margin * 2) / nbOfElement
+  val leftMargin: Int = 40
+  val topMargin: Int = 80
+  val caseWidth: Int = (width - leftMargin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
   val possibilities: Array[String] = Array("/original/bug_big_eyes.png", "/original/bug_big_nose_blue.png", "/original/bug_eyes.png", "/original/bug_green.png", "/original/bug_smile.png")
   var select1: Position = new Position()
@@ -217,8 +218,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   def select(x: Int, y: Int): Boolean = {
     var areThereTwoSelections = false
-    val cellX: Int = x * caseWidth + margin
-    val cellY: Int = y * caseWidth + 2*margin
+    val cellX: Int = x * caseWidth + leftMargin
+    val cellY: Int = y * caseWidth + topMargin
     // reinitialise if there is a weird combination
     if (select1.x == -1 || select1.y == -1) {
       resetSelection()
@@ -371,12 +372,13 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       display.frontBuffer.synchronized {
         drawUI()
         displayScoring()
+        val gridBG = new GraphicsBitmap("/res/dirt(perf).png")
 
-        for (i <- margin to boxWidth by caseWidth) {
+
+        for (i <- leftMargin until boxWidth+leftMargin by caseWidth) {
           jCount = 0
-          for (j <- 2*margin to boxWidth+margin by caseWidth) {
+          for (j <- topMargin until boxWidth+topMargin by caseWidth) {
             if (box(iCount)(jCount).display) {
-              //display.drawPicture(i + caseWidth / 2, j + caseWidth / 2, box(iCount)(jCount).bitmap)
               display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
@@ -386,7 +388,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, -0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else {
-              //display.drawTransformedPicture(i, j, 0, 0, new GraphicsBitmap("/res/dirt.png"))
+              display.drawTransformedPicture(i, j, 0, 0,gridBG)
             }
             jCount += 1
           }
@@ -407,20 +409,20 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
     //display level
     display.setColor(Color.WHITE)
-    display.drawFillRect(display.getFrameWidth() / 2 - (margin/2), 10, margin, margin)
-    display.drawString(display.getFrameWidth() / 2 -(margin/2) +offset, 10 +margin -offset, s"${level.level}", Color.BLACK, fontSize)
+    display.drawFillRect(display.getFrameWidth() / 2 - (leftMargin/2), 10, leftMargin, leftMargin)
+    display.drawString(display.getFrameWidth() / 2 -(leftMargin/2) +offset, 10 +leftMargin -offset, s"${level.level}", Color.BLACK, fontSize)
 
     //display target and score
     display.setColor(Color.WHITE)
-    display.drawFillRect(display.getFrameWidth() - width - margin, display.getFrameHeight() - 2*margin, width, margin)
-    display.drawString(display.getFrameWidth() - width - margin, display.getFrameHeight() - margin - 50, s"Target: ${level.goal}", Color.BLACK, fontSize)
-    display.drawString(display.getFrameWidth() - width - margin +(width/2 -offset), display.getFrameHeight() - margin - offset, s"${level.score}", Color.BLACK, fontSize)
+    display.drawFillRect(display.getFrameWidth() - width - leftMargin, display.getFrameHeight() - topMargin, width, leftMargin)
+    display.drawString(display.getFrameWidth() - width - leftMargin, display.getFrameHeight() - leftMargin - 50, s"Target: ${level.goal}", Color.BLACK, fontSize)
+    display.drawString(display.getFrameWidth() - width - leftMargin +(width/2 -offset), display.getFrameHeight() - leftMargin - offset, s"${level.score}", Color.BLACK, fontSize)
 
     //display moves
     display.setColor(Color.WHITE)
-    display.drawFillRect(margin, display.getFrameHeight() - 2*margin, width, margin)
-    display.drawString(margin, display.getFrameHeight() - margin - 50, "Moves left:", Color.BLACK, fontSize)
-    display.drawString(margin +(width/2 -offset), display.getFrameHeight() - margin - offset, s"${level.movesLeft}", Color.BLACK, fontSize)
+    display.drawFillRect(leftMargin, display.getFrameHeight() - topMargin, width, leftMargin)
+    display.drawString(leftMargin, display.getFrameHeight() - topMargin - 50, "Moves left:", Color.BLACK, fontSize)
+    display.drawString(leftMargin +(width/2 -offset), display.getFrameHeight() - topMargin - offset, s"${level.movesLeft}", Color.BLACK, fontSize)
   }
 
   def drawUI(): Unit = {
@@ -433,7 +435,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 //        display.drawTransformedPicture(i, j, 0, 0, gridBG)
 //      }
 //    }
-    display.drawPicture(display.getFrameWidth()/2, display.getFrameWidth()/2 + margin, gridBG)
+    display.drawPicture(display.getFrameWidth()/2, display.getFrameWidth()/2+ topMargin, gridBG)
   }
 
   def resetSelection(): Unit = {
