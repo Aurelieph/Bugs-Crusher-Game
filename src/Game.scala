@@ -11,8 +11,6 @@ object Game extends App {
 
   game.start(pregame = true)
 
-  //game.drawUI()
-
   display.addMouseListener(new MouseListener {
     override def mouseClicked(e: MouseEvent): Unit = {
     }
