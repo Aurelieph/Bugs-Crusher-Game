@@ -12,8 +12,7 @@ object Game extends App {
   game.start()
 
   display.addMouseListener(new MouseListener {
-    override def mouseClicked(e: MouseEvent): Unit = {
-    }
+    override def mouseClicked(e: MouseEvent): Unit = {}
 
     override def mousePressed(e: MouseEvent): Unit = {
       val clickX = e.getX
@@ -21,13 +20,16 @@ object Game extends App {
       val caseNumberX = (clickX - game.leftMargin) / game.caseWidth
       val caseNumberY = (clickY - game.topMargin) / game.caseWidth
 
-      if (game.select(caseNumberX, caseNumberY)) {
+      if (game.selectable && game.select(caseNumberX, caseNumberY)) {
         if (game.switchPosition()) {
           game.resolveGrid()
         }
         else {
           game.rollBack()
         }
+      }
+      else if(!game.selectable && game.clickButton(clickX,clickY)) {
+        game.start(restart = true, completely = true)
       }
     }
 

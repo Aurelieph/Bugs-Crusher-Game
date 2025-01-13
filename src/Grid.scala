@@ -11,10 +11,7 @@ class Position(var x: Int, var y: Int) {
   }
 
   def isEmpty(): Boolean = {
-    if (this.x == -1 && this.y == -1) {
-      true
-    }
-    else false
+    this.x == -1 && this.y == -1
   }
 }
 
@@ -31,12 +28,25 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   var currentLevel: Int = 1
   var level = new Scoring(currentLevel)
   var totalScore: Int = 0
+  val fontSize: Int = 24
+  val buttonWidth = 150
+  val buttonHeight = 60
+  val buttonX = display.getFrameWidth() / 2 - buttonWidth / 2
+  val buttonY = topMargin + boxWidth + topMargin / 2
+  var selectable: Boolean = false
 
-  def start(restart: Boolean = false): Unit = {
+  def start(restart: Boolean = false, completely: Boolean = false): Unit = {
+    selectable = true
     display.frontBuffer.synchronized {
 
       if (restart) {
         display.clear()
+      }
+      if (completely) {
+        totalScore = 0
+        currentLevel = 1
+        resetSelection()
+        level = new Scoring(currentLevel)
       }
       initializeElements()
       resolveGrid(true)
@@ -201,7 +211,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         box(i)(j) = temp
 
         if (isPossible) {
-          //println(i, j) used to show possible match in the console
           return true
         }
       }
@@ -372,7 +381,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         displayScoring()
         val darkGreen = new Color(116, 132, 4)
         val imageOffset = 2
-        //val gridBG = new GraphicsBitmap("/res/dirt.png")
 
         for (i <- leftMargin until boxWidth + leftMargin by caseWidth) {
           jCount = 0
@@ -380,25 +388,21 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             if (box(iCount)(jCount).display) {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
-              //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
               display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
-              //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
               display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, 0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display) {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
-              //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
               display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, -0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
-              //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
             }
             jCount += 1
           }
@@ -411,21 +415,20 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
+  def drawFancyString(x: Int, y: Int, str: String): Unit = {
+    display.drawFancyString(
+      posX = x,
+      posY = y,
+      str = str,
+      fontFamily = "Helvetica",
+      fontSize = fontSize,
+      halign = SwingConstants.CENTER,
+      valign = SwingConstants.CENTER)
+  }
+
   def displayScoring(): Unit = {
     val labelHeight = 40
     val labelWidth: Int = 140
-    val fontSize: Int = 24
-
-    def drawFancyString(x: Int, y: Int, str: String): Unit = {
-      display.drawFancyString(
-        posX = x,
-        posY = y,
-        str = str,
-        fontFamily="Helvetica",
-        fontSize = fontSize,
-        halign = SwingConstants.CENTER,
-        valign = SwingConstants.CENTER)
-    }
 
     //display level
     display.setColor(Color.WHITE)
@@ -440,8 +443,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
     //display moves
     display.drawFilledOval(leftMargin, display.getFrameHeight() - topMargin, labelWidth, leftMargin)
-    drawFancyString(leftMargin + labelWidth / 2,display.getFrameHeight() - bottomMargin / 2,"Moves left:")
-    drawFancyString(leftMargin + labelWidth / 2,display.getFrameHeight() - topMargin + labelHeight / 2 - fontSize / 4,s"${level.movesLeft}")
+    drawFancyString(leftMargin + labelWidth / 2, display.getFrameHeight() - bottomMargin / 2, "Moves left:")
+    drawFancyString(leftMargin + labelWidth / 2, display.getFrameHeight() - topMargin + labelHeight / 2 - fontSize / 4, s"${level.movesLeft}")
   }
 
   def drawUI(): Unit = {
@@ -483,6 +486,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   def nextLevel(): Unit = {
     if (level.isLevelFinished()) {
+      totalScore += level.score
+
       //next level message
       if (level.goalReached() && !level.isVictory()) {
         currentLevel += 1
@@ -492,19 +497,39 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       }
       //beat the game message
       else if (level.isVictory()) {
-        display.drawTransformedPicture(display.getFrameWidth() / 2, display.getFrameWidth() / 2 + topMargin / 2, 0, 0.75, level.endMessage())
-        display.drawString(display.getFrameWidth() / 2, display.getFrameWidth() / 2 + topMargin / 2, totalScore.toString, Color.BLACK, 15)
-        Thread.sleep(5000)
+        selectable = false
+        display.drawTransformedPicture(display.getFrameWidth() / 2, boxWidth / 2, 0, 0.75, level.endMessage())
+        drawFancyString(display.getFrameWidth() / 2, boxWidth / 2 + 70, totalScore.toString)
+        Thread.sleep(2000)
       }
       //lost the game message
       else {
+        selectable = false
         display.drawTransformedPicture(display.getFrameWidth() / 2, display.getFrameWidth() / 2 + topMargin / 2, 0, 0.75, level.endMessage())
-        Thread.sleep(5000)
+        Thread.sleep(2000)
 
       }
       if (!level.endGame()) {
         start(restart = true)
       }
+      else {
+
+        display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)
+        drawFancyString(display.getFrameWidth() / 2, topMargin + boxWidth + topMargin / 2 + buttonHeight / 2 - fontSize / 4, "RESTART")
+
+      }
     }
+  }
+
+  def clickButton(x: Int, y: Int): Boolean = {
+    display.setColor(Color.GRAY)
+    display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)
+    drawFancyString(display.getFrameWidth() / 2, topMargin + boxWidth + topMargin / 2 + buttonHeight / 2 - fontSize / 4, "RESTART")
+    Thread.sleep(200)
+    display.setColor(Color.WHITE)
+    display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)
+    drawFancyString(display.getFrameWidth() / 2, topMargin + boxWidth + topMargin / 2 + buttonHeight / 2 - fontSize / 4, "RESTART")
+
+    x > buttonX && x < buttonX + buttonWidth && y > buttonY && y < buttonY + buttonHeight
   }
 }
