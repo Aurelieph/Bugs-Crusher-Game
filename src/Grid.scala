@@ -379,17 +379,20 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
           jCount = 0
           for (j <- topMargin until boxWidth+topMargin by caseWidth) {
             if (box(iCount)(jCount).display) {
+              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
               display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
+              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
               display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display) {
+              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
               display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, -0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else {
-              display.drawTransformedPicture(i, j, 0, 0,gridBG)
-            }
+              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
+          }
             jCount += 1
           }
           iCount += 1
@@ -426,16 +429,9 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def drawUI(): Unit = {
-    var background = new GraphicsBitmap("/res/grass.jpg")
-    var gridBG = new GraphicsBitmap("/res/dirt(perf).png")
+    val background = new GraphicsBitmap("/res/grass.jpg")
     display.drawTransformedPicture(0, 0, 0, 1, background)
 
-//    for (i <- margin to boxWidth by caseWidth) {
-//      for (j <- margin to boxWidth by caseWidth) {
-//        display.drawTransformedPicture(i, j, 0, 0, gridBG)
-//      }
-//    }
-    display.drawPicture(display.getFrameWidth()/2, display.getFrameWidth()/2+ topMargin, gridBG)
   }
 
   def resetSelection(): Unit = {
