@@ -3,7 +3,8 @@ import hevs.graphics.utils.GraphicsBitmap
 class Scoring(var level:Int) {
   var score:Int = 0
   var goal:Int = 300
-  var movesLeft = 11 - level
+  var movesLeft = 9 - level
+  val lastLevel = 5
 
   def decreaseMove(): Unit = {
     movesLeft -= 1
@@ -16,29 +17,30 @@ class Scoring(var level:Int) {
   def goalReached(): Boolean = {
     score >= goal
   }
+  def isVictory(): Boolean = {
+    level > lastLevel
+  }
 
   def endMessage(): GraphicsBitmap = {
-    val levelup = new GraphicsBitmap("/res/level.png")
-    val gameover = new GraphicsBitmap("/res/gameover.png")
-    val end = new GraphicsBitmap("/res/win2.png")
+      val levelup = new GraphicsBitmap("/res/level.png")
+      val gameover = new GraphicsBitmap("/res/gameover.png")
+      val victory = new GraphicsBitmap("/res/win.png")
 
-    if (level > 5) {
-      return end
-    }
-    if (movesLeft <= 0 && !goalReached()){
-      return gameover
-    }
+      if (isVictory()) {
+        return victory
+      }
+      if (isLevelFinished && !goalReached()){
+        return gameover
+      }
     levelup
   }
 
   def isLevelFinished(): Boolean = {
-    if (movesLeft <= 0){
-      return true
-    }
-    false
+    movesLeft <= 0
+
   }
 
   def endGame(): Boolean = {
-  level > 5 || (movesLeft <= 0 && !goalReached())
+    isVictory() || (isLevelFinished() && !goalReached())
   }
 }

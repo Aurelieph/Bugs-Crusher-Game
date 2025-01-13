@@ -2,6 +2,7 @@ import hevs.graphics.FunGraphics
 import hevs.graphics.utils.GraphicsBitmap
 
 import java.awt.Color
+import javax.swing.SwingConstants
 import scala.util.Random
 
 class Position(var x: Int, var y: Int) {
@@ -23,6 +24,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val topMargin: Int = 80
   val caseWidth: Int = (width - leftMargin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
+  val bottomMargin: Int = display.getFrameHeight() - topMargin - boxWidth
   val possibilities: Array[String] = Array("/original/bug_big_eyes.png", "/original/bug_big_nose_blue.png", "/original/bug_eyes.png", "/original/bug_green.png", "/original/bug_smile.png")
   var select1: Position = new Position()
   var select2: Position = new Position()
@@ -30,14 +32,14 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   var level = new Scoring(currentLevel)
   var totalScore: Int = 0
 
-  def start(restart: Boolean = false, pregame: Boolean = false): Unit = {
+  def start(restart: Boolean = false): Unit = {
     display.frontBuffer.synchronized {
 
       if (restart) {
         display.clear()
       }
       initializeElements()
-      resolveGrid(pregame)
+      resolveGrid(true)
       drawElements()
     }
   }
@@ -250,9 +252,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
   }
 
-  def drawSelection(x: Int, y: Int, color: Color = Color.red): Unit = {
+  def drawSelection(x: Int, y: Int, color: Color = Color.blue): Unit = {
     display.setColor(color)
     display.drawCircle(x, y, caseWidth)
+    display.drawCircle(x - 1, y - 1, caseWidth + 2)
+    display.drawCircle(x - 2, y - 2, caseWidth + 4)
   }
 
   def rollBack(): Boolean = {
@@ -366,35 +370,36 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       display.frontBuffer.synchronized {
         drawUI()
         displayScoring()
-        val darkGreen = new Color (116,132,4)
+        val darkGreen = new Color(116, 132, 4)
+        val imageOffset = 2
         //val gridBG = new GraphicsBitmap("/res/dirt.png")
 
-        for (i <- leftMargin until boxWidth+leftMargin by caseWidth) {
+        for (i <- leftMargin until boxWidth + leftMargin by caseWidth) {
           jCount = 0
-          for (j <- topMargin until boxWidth+topMargin by caseWidth) {
+          for (j <- topMargin until boxWidth + topMargin by caseWidth) {
             if (box(iCount)(jCount).display) {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
               //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
-              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
+              display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
               //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
-              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0.2, 0.2, box(iCount)(jCount).bitmap)
+              display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, 0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else if (animation && !box(iCount)(jCount).display) {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
               //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
-              display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, -0.2, 0.2, box(iCount)(jCount).bitmap)
+              display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, -0.2, 0.2, box(iCount)(jCount).bitmap)
             }
             else {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
               //display.drawTransformedPicture(i + caseWidth / 2, j + caseWidth / 2, 0, 0.115, gridBG)
-          }
+            }
             jCount += 1
           }
           iCount += 1
@@ -407,32 +412,41 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def displayScoring(): Unit = {
-    val width: Int = 140
+    val labelHeight = 40
+    val labelWidth: Int = 140
     val fontSize: Int = 24
-    val offsetX: Int = 15
-    val offsetY: Int = 10
+
+    def drawFancyString(x: Int, y: Int, str: String): Unit = {
+      display.drawFancyString(
+        posX = x,
+        posY = y,
+        str = str,
+        fontFamily="Helvetica",
+        fontSize = fontSize,
+        halign = SwingConstants.CENTER,
+        valign = SwingConstants.CENTER)
+    }
 
     //display level
     display.setColor(Color.WHITE)
-    display.drawFilledCircle(display.getFrameWidth() / 2 - (leftMargin/2), 10, leftMargin)
-    display.drawString(display.getFrameWidth() / 2 -(leftMargin/2) +offsetX, 10 +leftMargin -offsetY, s"${level.level}", Color.BLACK, fontSize)
+    display.drawFilledCircle(display.getFrameWidth() / 2 - labelHeight / 2, topMargin / 2 - labelHeight / 2, labelHeight)
+    drawFancyString(display.getFrameWidth() / 2, topMargin / 2 - fontSize / 4, s"${level.level}")
 
     //display target and score
-    display.setColor(Color.WHITE)
-    display.drawFilledOval(display.getFrameWidth() - width - leftMargin, display.getFrameHeight() - topMargin, width, leftMargin)
-    display.drawString(display.getFrameWidth() - width - leftMargin, display.getFrameHeight() - leftMargin - 50, s"Target: ${level.goal}", Color.BLACK, fontSize)
-    display.drawString(display.getFrameWidth() - width - leftMargin +(width/2 -offsetX), display.getFrameHeight() - leftMargin - offsetY, s"${level.score}", Color.BLACK, fontSize)
+    display.drawFilledOval(display.getFrameWidth() - labelWidth - leftMargin, display.getFrameHeight() - topMargin, labelWidth, leftMargin)
+    drawFancyString(display.getFrameWidth() - labelWidth / 2 - leftMargin, display.getFrameHeight() - bottomMargin / 2, s"Target: ${level.goal}")
+    drawFancyString(display.getFrameWidth() - labelWidth / 2 - leftMargin, display.getFrameHeight() - topMargin + labelHeight / 2 - fontSize / 4, s"${level.score}")
+
 
     //display moves
-    display.setColor(Color.WHITE)
-    display.drawFilledOval(leftMargin, display.getFrameHeight() - topMargin, width, leftMargin)
-    display.drawString(leftMargin, display.getFrameHeight() - leftMargin - 50, "Moves left:", Color.BLACK, fontSize)
-    display.drawString(leftMargin +(width/2 -offsetX), display.getFrameHeight() - leftMargin - offsetY, s"${level.movesLeft}", Color.BLACK, fontSize)
+    display.drawFilledOval(leftMargin, display.getFrameHeight() - topMargin, labelWidth, leftMargin)
+    drawFancyString(leftMargin + labelWidth / 2,display.getFrameHeight() - bottomMargin / 2,"Moves left:")
+    drawFancyString(leftMargin + labelWidth / 2,display.getFrameHeight() - topMargin + labelHeight / 2 - fontSize / 4,s"${level.movesLeft}")
   }
 
   def drawUI(): Unit = {
     val background = new GraphicsBitmap("/res/grass.jpg")
-    val lightGreen = new Color(189,209,12)
+    val lightGreen = new Color(189, 209, 12)
     display.drawTransformedPicture(0, 0, 0, 1, background)
     display.setColor(lightGreen)
     display.drawFillRect(leftMargin, topMargin, boxWidth, boxWidth)
@@ -470,37 +484,26 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def nextLevel(): Unit = {
     if (level.isLevelFinished()) {
       //next level message
-      if (level.goalReached()) {
+      if (level.goalReached() && !level.isVictory()) {
         currentLevel += 1
         level = new Scoring(currentLevel)
-        display.drawTransformedPicture(display.getFrameWidth()/2, display.getFrameWidth()/2 + topMargin/2, 0, 0.5, level.endMessage())
+        display.drawTransformedPicture(display.getFrameWidth() / 2, display.getFrameWidth() / 2 + topMargin / 2, 0, 0.5, level.endMessage())
         Thread.sleep(2000)
-
-//        display.setColor(Color.WHITE)
-//        display.drawFillRect(display.getFrameWidth() / 2 - (200/2), display.getFrameWidth() / 2 - 20, 200, 60)
-//        display.setColor(Color.BLACK)
-//        display.drawRect(display.getFrameWidth() / 2 - (200/2), display.getFrameWidth() / 2 - 20, 200, 60)
-//        display.drawString(display.getFrameWidth() / 2 - (200/2) + 30, display.getFrameWidth() / 2 +20, level.endMessage(), Color.BLACK, 24)
       }
       //beat the game message
-      if (level.goalReached() && level.endGame()){
-        display.drawTransformedPicture(display.getFrameWidth()/2, display.getFrameWidth()/2 + topMargin/2, 0, 0.75, level.endMessage())
-        display.drawString(display.getFrameWidth()/2, display.getFrameWidth()/2 + topMargin/2, totalScore.toString, Color.BLACK, 15)
-        Thread.sleep(2000)
+      else if (level.isVictory()) {
+        display.drawTransformedPicture(display.getFrameWidth() / 2, display.getFrameWidth() / 2 + topMargin / 2, 0, 0.75, level.endMessage())
+        display.drawString(display.getFrameWidth() / 2, display.getFrameWidth() / 2 + topMargin / 2, totalScore.toString, Color.BLACK, 15)
+        Thread.sleep(5000)
       }
       //lost the game message
       else {
-        display.drawTransformedPicture(display.getFrameWidth()/2, display.getFrameWidth()/2 + topMargin/2, 0, 0.75, level.endMessage())
-        Thread.sleep(2000)
+        display.drawTransformedPicture(display.getFrameWidth() / 2, display.getFrameWidth() / 2 + topMargin / 2, 0, 0.75, level.endMessage())
+        Thread.sleep(5000)
 
-//        display.setColor(Color.WHITE)
-//        display.drawFillRect(display.getFrameWidth() / 2 - (240/2), display.getFrameWidth() / 2 - 20, 240, 60)
-//        display.setColor(Color.BLACK)
-//        display.drawRect(display.getFrameWidth() / 2 - (240/2), display.getFrameWidth() / 2 - 20, 240, 60)
-//        display.drawString(display.getFrameWidth() / 2 - (240/2) + 20, display.getFrameWidth() / 2 +20, level.endMessage(), Color.BLACK, 24)
       }
       if (!level.endGame()) {
-        start(restart = true, pregame = true)
+        start(restart = true)
       }
     }
   }
