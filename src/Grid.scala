@@ -378,7 +378,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     try {
       display.frontBuffer.synchronized {
         drawUI()
-        displayScoring()
         val darkGreen = new Color(116, 132, 4)
         val imageOffset = 2
 
@@ -430,6 +429,12 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     val labelHeight = 40
     val labelWidth: Int = 140
 
+    //display mascot 1
+    display.drawTransformedPicture(leftMargin,boxWidth+topMargin+40,0,0.5,new GraphicsBitmap("/res/mascot1.png"))
+
+    //display mascot 1
+    display.drawTransformedPicture(boxWidth+leftMargin,boxWidth+topMargin+40,0,0.5,new GraphicsBitmap("/res/mascot2.png"))
+
     //display level
     display.setColor(Color.WHITE)
     display.drawFilledCircle(display.getFrameWidth() / 2 - labelHeight / 2, topMargin / 2 - labelHeight / 2, labelHeight)
@@ -445,6 +450,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     display.drawFilledOval(leftMargin, display.getFrameHeight() - topMargin, labelWidth, leftMargin)
     drawFancyString(leftMargin + labelWidth / 2, display.getFrameHeight() - bottomMargin / 2, "Moves left:")
     drawFancyString(leftMargin + labelWidth / 2, display.getFrameHeight() - topMargin + labelHeight / 2 - fontSize / 4, s"${level.movesLeft}")
+
+
   }
 
   def drawUI(): Unit = {
@@ -453,6 +460,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     display.drawTransformedPicture(0, 0, 0, 1, background)
     display.setColor(lightGreen)
     display.drawFillRect(leftMargin, topMargin, boxWidth, boxWidth)
+
+    displayScoring()
   }
 
   def resetSelection(): Unit = {
