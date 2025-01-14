@@ -23,6 +23,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val boxWidth: Int = caseWidth * nbOfElement
   val bottomMargin: Int = display.getFrameHeight() - topMargin - boxWidth
   val possibilities: Array[String] = Array("/original/bug_big_eyes.png", "/original/bug_big_nose_blue.png", "/original/bug_eyes.png", "/original/bug_green.png", "/original/bug_smile.png")
+  val bonus: String = "/dynamite.png"
   var select1: Position = new Position()
   var select2: Position = new Position()
   var currentLevel: Int = 1
@@ -49,7 +50,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         level = new Scoring(currentLevel)
       }
       initializeElements()
-      resolveGrid(true)
+      resolveGrid(pregame = true)
       drawElements()
     }
   }
@@ -137,7 +138,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       for (i <- box.indices) {
         for (j: Int <- box(i).indices) {
           if (box(i)(nbOfElement - j - 1).toMove) {
-
             box(i)(nbOfElement - j - 1).toMove = false
             box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1).copy()
             box(i)(nbOfElement - j - 1).display = false
@@ -146,7 +146,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             }
 
           }
-          if (nbOfElement - j - 1 == 0 && !box(i)(nbOfElement - j - 1).display) {
+          if (nbOfElement - j - 1 == 0 && !box(i)(nbOfElement - j - 1).display && !box(i)(nbOfElement - j - 1).bonus) {
             box(i)(nbOfElement - j - 1).toGenerate = true
           }
         }
@@ -159,6 +159,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             box(i)(j).updateValue(file)
             box(i)(j).toGenerate = false
             box(i)(j).isPartOfMatch = false
+            box(i)(j).display = true
+          }
+          else if (box(i)(j).bonus) {
+            box(i)(j).updateValue(bonus)
             box(i)(j).display = true
           }
         }
@@ -198,6 +202,13 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   }
 
   def isThereAPossibleMove(): Boolean = {
+    for (i <- box.indices) {
+      for (j <- box(i).indices) {
+        if (box(i)(j).bonus) {
+          return true
+        }
+      }
+    }
 
     for (i <- 0 until box.length - 1) {
       for (j <- 0 until box.length - 1) {
@@ -296,27 +307,99 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     var lastMatch: String = impossibleValue
     var matchCount: Int = 0
     var isMatch: Boolean = false
+
+    def updateMatches(index1: Int, index2: Int, k: Int) = {
+      if (box(index1)(index2).bonus) {
+        box(index1)(index2).bonusIsActivated
+      } else {
+        box(index1)(index2).isPartOfMatch = true
+        box(index1)(index2).display = false
+      }
+      if (!pregame) {
+        level.increaseScore(10)
+        //create bonus
+        if (matchCount >= 3 && k == matchCount) {
+          box(index1)(index2).bonus = true
+          box(index1)(index2).isPartOfMatch = false
+        }
+      }
+    }
+
+    try {
+      //check if the bonus is activated
+      if (!select1.isEmpty() && !select2.isEmpty()) {
+        if (box(select1.x)(select1.y).bonus) {
+          box(select1.x)(select1.y).bonusIsActivated = true
+          if (highJack) {
+            return true
+          }
+        }
+        if (box(select2.x)(select2.y).bonus) {
+          box(select2.x)(select2.y).bonusIsActivated = true
+          if (highJack) {
+            return true
+          }
+        }
+      }
+      var stillBonus = false
+      do {
+        stillBonus = false
+        for (i <- box.indices) {
+          for (j <- box(i).indices) {
+            if (box(i)(j).bonusIsActivated) {
+              box(i)(j).bonus = false
+              box(i)(j).bonusIsActivated = false
+              for (k <- box.indices) {
+                if (box(k)(j).bonus) {
+                  box(k)(j).bonusIsActivated
+                  stillBonus = true
+                } else {
+                  box(k)(j).isPartOfMatch = true
+                  box(k)(j).display = false
+                }
+              }
+              for (k <- box(i).indices) {
+                if (box(i)(k).bonus) {
+                  box(i)(k).bonusIsActivated
+                  stillBonus = true
+                }
+                else {
+                  box(i)(k).isPartOfMatch = true
+                  box(i)(k).display = false
+                }
+              }
+              isMatch = true
+            }
+          }
+        }
+      }
+      while (stillBonus)
+    }
+
     try {
       //go through vertically
       for (i <- box.indices) {
         for (j <- box(i).indices) {
-          if (box(i)(j).value == lastMatch) {
+          if (box(i)(j).value == lastMatch && !box(i)(j).bonus) {
             matchCount += 1
             if (matchCount >= 2) {
               if (highJack) {
                 return true
               }
               isMatch = true
-              for (k <- 0 to matchCount) {
-                box(i)(j - k).isPartOfMatch = true
-                box(i)(j - k).display = false
-                if (!pregame) {
-                  level.increaseScore(10)
+              if (j == box(i).length - 1) {
+                for (k <- 0 to matchCount) {
+                  updateMatches(i, j - k, k)
                 }
               }
             }
           }
           else {
+            if (matchCount >= 2) {
+              for (k <- 0 to matchCount) {
+                updateMatches(i, j - k - 1, k)
+              }
+            }
             matchCount = 0
             lastMatch = box(i)(j).value
 
@@ -332,24 +415,29 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       lastMatch = impossibleValue
       for (j <- box.indices) {
         for (i <- box(j).indices) {
-          if (box(i)(j).value == lastMatch) {
+          if (box(i)(j).value == lastMatch && !box(i)(j).bonus) {
             matchCount += 1
             if (matchCount >= 2) {
               if (highJack) {
                 return true
               }
               isMatch = true
-              for (k <- 0 to matchCount) {
-                box(i - k)(j).isPartOfMatch = true
-                box(i - k)(j).display = false
-                if (!pregame) {
-                  level.increaseScore(10)
+              if (i == box(j).length - 1) {
+
+                for (k <- 0 to matchCount) {
+                  updateMatches(i - k, j, k)
                 }
               }
+
             }
 
           }
           else {
+            if (matchCount >= 2) {
+              for (k <- 0 to matchCount) {
+                updateMatches(i - k - 1, j, k)
+              }
+            }
             matchCount = 0
             lastMatch = box(i)(j).value
 
@@ -389,7 +477,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               display.drawRect(i, j, caseWidth, caseWidth)
               display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, 0, 0.2, box(iCount)(jCount).bitmap)
             }
-            else if (animation && !box(iCount)(jCount).display && addSize % 2 == 0) {
+            else if (animation && (!box(iCount)(jCount).display) && addSize % 2 == 0) {
               display.setColor(darkGreen)
               display.drawRect(i, j, caseWidth, caseWidth)
               display.drawTransformedPicture(i + caseWidth / 2 + imageOffset, j + caseWidth / 2, 0.2, 0.2, box(iCount)(jCount).bitmap)
@@ -430,10 +518,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     val labelWidth: Int = 140
 
     //display mascot 1
-    display.drawTransformedPicture(leftMargin,boxWidth+topMargin+40,0,0.5,new GraphicsBitmap("/res/mascot1.png"))
+    display.drawTransformedPicture(leftMargin, boxWidth + topMargin + 40, 0, 0.5, new GraphicsBitmap("/res/mascot1.png"))
 
     //display mascot 1
-    display.drawTransformedPicture(boxWidth+leftMargin,boxWidth+topMargin+40,0,0.5,new GraphicsBitmap("/res/mascot2.png"))
+    display.drawTransformedPicture(boxWidth + leftMargin, boxWidth + topMargin + 40, 0, 0.5, new GraphicsBitmap("/res/mascot2.png"))
 
     //display level
     display.setColor(Color.WHITE)

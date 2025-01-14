@@ -8,6 +8,8 @@ class Element(var value: String) {
   var toMove:Boolean = false
   var toGenerate:Boolean = false
   var bitmap = new GraphicsBitmap(value)
+  var bonus:Boolean = false
+  var bonusIsActivated:Boolean = false
 
   def updateValue(newValue: String): Unit = {
     value = newValue
@@ -21,6 +23,8 @@ class Element(var value: String) {
     newElement.display = this.display
     newElement.toMove = this.toMove
     newElement.toGenerate = this.toGenerate
+    newElement.bonus = this.bonus
+    newElement.bonusIsActivated = this.bonusIsActivated
     newElement
   }
 
