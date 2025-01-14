@@ -309,12 +309,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     var isMatch: Boolean = false
 
     def updateMatches(index1: Int, index2: Int, k: Int) = {
-      if (box(index1)(index2).bonus) {
-        box(index1)(index2).bonusIsActivated
-      } else {
-        box(index1)(index2).isPartOfMatch = true
-        box(index1)(index2).display = false
-      }
+      box(index1)(index2).isPartOfMatch = true
+      box(index1)(index2).display = false
       if (!pregame) {
         level.increaseScore(10)
         //create bonus
@@ -341,39 +337,27 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
           }
         }
       }
-      var stillBonus = false
-      do {
-        stillBonus = false
-        for (i <- box.indices) {
-          for (j <- box(i).indices) {
-            if (box(i)(j).bonusIsActivated) {
+
+      for (i <- box.indices) {
+        for (j <- box(i).indices) {
+          if (box(i)(j).bonusIsActivated) {
+
+            box(i)(j).bonusIsActivated = false
+            for (k <- box.indices) {
+              box(k)(j).isPartOfMatch = true
+              box(k)(j).display = false
               box(i)(j).bonus = false
-              box(i)(j).bonusIsActivated = false
-              for (k <- box.indices) {
-                if (box(k)(j).bonus) {
-                  box(k)(j).bonusIsActivated
-                  stillBonus = true
-                } else {
-                  box(k)(j).isPartOfMatch = true
-                  box(k)(j).display = false
-                }
-              }
-              for (k <- box(i).indices) {
-                if (box(i)(k).bonus) {
-                  box(i)(k).bonusIsActivated
-                  stillBonus = true
-                }
-                else {
-                  box(i)(k).isPartOfMatch = true
-                  box(i)(k).display = false
-                }
-              }
-              isMatch = true
             }
+            for (k <- box(i).indices) {
+              box(i)(k).isPartOfMatch = true
+              box(i)(k).display = false
+              box(i)(k).bonus = false
+
+            }
+            isMatch = true
           }
         }
       }
-      while (stillBonus)
     }
 
     try {
