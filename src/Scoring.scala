@@ -4,7 +4,7 @@ import hevs.graphics.utils.GraphicsBitmap
 class Scoring(var level:Int) {
   var score:Int = 0
   var goal:Int = 1000
-  var movesLeft = 9 - level
+  var movesLeft = 10 - level -1
   val lastLevel = 5
   def decreaseMove(): Unit = {
     movesLeft -= 1
