@@ -545,9 +545,9 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
 
   def drawUI(): Unit = {
     val background = new GraphicsBitmap("/res/grass.jpg")
-    val title = new GraphicsBitmap("/res/BUGSCrushe2r.png")
-    val mascotAurelie = new GraphicsBitmap("/res/mascot1.png")
-    val mascotGrace = new GraphicsBitmap("/res/mascot2.png")
+    val title = new GraphicsBitmap("/BugsCrusherTitle.png")
+    val mascotGrace = new GraphicsBitmap("/res/mascot1.png")
+    val mascotAurelie = new GraphicsBitmap("/res/mascot2.png")
     val lightGreen = new Color(189, 209, 12)
     display.drawTransformedPicture(0, 0, 0, 1, background)
     display.setColor(lightGreen)
@@ -556,8 +556,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     //display title
     display.drawTransformedPicture(display.getFrameWidth() / 2, topMargin / 2, 0, 0.3, title)
     //display mascots
-    display.drawTransformedPicture(leftMargin, boxWidth + 2 * topMargin, 0, 0.5, mascotAurelie)
-    display.drawTransformedPicture(boxWidth + leftMargin, boxWidth + 2 * topMargin, 0, 0.5, mascotGrace)
+    display.drawTransformedPicture(leftMargin, boxWidth + 2 * topMargin, 0, 0.5, mascotGrace)
+    display.drawTransformedPicture(boxWidth + leftMargin, boxWidth + 2 * topMargin, 0, 0.5, mascotAurelie)
 
     displayScoring()
   }
