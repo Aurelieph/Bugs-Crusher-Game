@@ -33,7 +33,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val buttonWidth = 150
   val buttonHeight = 60
   val buttonX = display.getFrameWidth() / 2 - buttonWidth / 2
-  val buttonY = topMargin + boxWidth + topMargin / 2
+  val buttonY = boxWidth - topMargin
   var selectable: Boolean = false
 
   // Initiate the game
@@ -203,7 +203,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     var increment = 0
     do {
       drawElements(animation = true, increment)
-      Thread.sleep(50)
+      Thread.sleep(10)
       increment += 1
     }
     while (increment < 15)
@@ -625,7 +625,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       }
       else {
         display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)
-        drawFancyString(display.getFrameWidth() / 2, topMargin + boxWidth + topMargin / 2 + buttonHeight / 2 - fontSize / 4, "RESTART")
+        drawFancyString(display.getFrameWidth() / 2, boxWidth - topMargin + buttonHeight / 2 - fontSize / 4, "RESTART")
 
       }
     }
@@ -635,11 +635,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def clickButton(x: Int, y: Int): Boolean = {
     display.setColor(Color.GRAY)
     display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)
-    drawFancyString(display.getFrameWidth() / 2, topMargin + boxWidth + topMargin / 2 + buttonHeight / 2 - fontSize / 4, "RESTART")
+    drawFancyString(display.getFrameWidth() / 2, boxWidth - topMargin + buttonHeight / 2 - fontSize / 4, "RESTART")
     Thread.sleep(200)
     display.setColor(Color.WHITE)
     display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)
-    drawFancyString(display.getFrameWidth() / 2, topMargin + boxWidth + topMargin / 2 + buttonHeight / 2 - fontSize / 4, "RESTART")
+    drawFancyString(display.getFrameWidth() / 2, boxWidth - topMargin + buttonHeight / 2 - fontSize / 4, "RESTART")
 
     x > buttonX && x < buttonX + buttonWidth && y > buttonY && y < buttonY + buttonHeight
   }
