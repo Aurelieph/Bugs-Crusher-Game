@@ -487,13 +487,13 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
-  def drawFancyString(x: Int, y: Int, str: String): Unit = {
+  def drawFancyString(x: Int, y: Int, str: String, size: Int = fontSize): Unit = {
     display.drawFancyString(
       posX = x,
       posY = y,
       str = str,
       fontFamily = "Helvetica",
-      fontSize = fontSize,
+      fontSize = size,
       halign = SwingConstants.CENTER,
       valign = SwingConstants.CENTER)
   }
@@ -501,38 +501,41 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def displayScoring(): Unit = {
     val labelHeight = 40
     val labelWidth: Int = 140
-
-    //display mascot 1
-    display.drawTransformedPicture(leftMargin, boxWidth + topMargin + 40, 0, 0.5, new GraphicsBitmap("/res/mascot1.png"))
-
-    //display mascot 1
-    display.drawTransformedPicture(boxWidth + leftMargin, boxWidth + topMargin + 40, 0, 0.5, new GraphicsBitmap("/res/mascot2.png"))
+    val pink = new Color (254,224,246)
+    display.setColor(pink)
 
     //display level
-    display.setColor(Color.WHITE)
-    display.drawFilledCircle(display.getFrameWidth() / 2 - labelHeight / 2, topMargin / 2 - labelHeight / 2, labelHeight)
-    drawFancyString(display.getFrameWidth() / 2, topMargin / 2 - fontSize / 4, s"${level.level}")
+    display.drawFilledOval(display.getFrameWidth()/2 - labelWidth/2, display.getFrameHeight() - leftMargin - labelHeight/2, labelWidth, labelHeight)
+    drawFancyString(display.getFrameWidth() / 2, display.getFrameHeight() - leftMargin - fontSize/4, s"Level: ${level.level}")
 
     //display target and score
-    display.drawFilledOval(display.getFrameWidth() - labelWidth - leftMargin, display.getFrameHeight() - topMargin, labelWidth, leftMargin)
-    drawFancyString(display.getFrameWidth() - labelWidth / 2 - leftMargin, display.getFrameHeight() - bottomMargin / 2, s"Target: ${level.goal}")
-    drawFancyString(display.getFrameWidth() - labelWidth / 2 - leftMargin, display.getFrameHeight() - topMargin + labelHeight / 2 - fontSize / 4, s"${level.score}")
-
+    display.drawFilledOval(display.getFrameWidth() - labelWidth - 2*leftMargin - 20, topMargin + boxWidth + 20, labelWidth, leftMargin)
+    drawFancyString(display.getFrameWidth() - labelWidth / 2 - 2*leftMargin -20, topMargin + boxWidth + 2*labelHeight, s"Reach:${level.goal}", 18)
+    drawFancyString(display.getFrameWidth() - labelWidth / 2 - 2*leftMargin -20, topMargin + boxWidth + 20 + labelHeight/2 - fontSize / 4, s"${level.score}")
 
     //display moves
-    display.drawFilledOval(leftMargin, display.getFrameHeight() - topMargin, labelWidth, leftMargin)
-    drawFancyString(leftMargin + labelWidth / 2, display.getFrameHeight() - bottomMargin / 2, "Moves left:")
-    drawFancyString(leftMargin + labelWidth / 2, display.getFrameHeight() - topMargin + labelHeight / 2 - fontSize / 4, s"${level.movesLeft}")
+    display.drawFilledOval(2*leftMargin + 20, topMargin + boxWidth + 20, labelWidth, leftMargin)
+    drawFancyString(2*leftMargin + labelWidth / 2 +20, topMargin + boxWidth + 2*labelHeight, "Moves left:", 18)
+    drawFancyString(2*leftMargin + labelWidth / 2 +20, topMargin + boxWidth + 20 + labelHeight / 2 - fontSize / 4, s"${level.movesLeft}")
 
 
   }
 
   def drawUI(): Unit = {
     val background = new GraphicsBitmap("/res/grass.jpg")
+    val title = new GraphicsBitmap("/res/BUGSCrushe2r.png")
+    val mascotAurelie = new GraphicsBitmap("/res/mascot1.png")
+    val mascotGrace = new GraphicsBitmap("/res/mascot2.png")
     val lightGreen = new Color(189, 209, 12)
     display.drawTransformedPicture(0, 0, 0, 1, background)
     display.setColor(lightGreen)
     display.drawFillRect(leftMargin, topMargin, boxWidth, boxWidth)
+
+    //display title
+    display.drawTransformedPicture(display.getFrameWidth()/2, topMargin/2, 0, 0.3, title)
+    //display mascots
+    display.drawTransformedPicture(leftMargin, boxWidth + 2*topMargin, 0, 0.5, mascotAurelie)
+    display.drawTransformedPicture(boxWidth + leftMargin, boxWidth + 2*topMargin, 0, 0.5, mascotGrace)
 
     displayScoring()
   }
