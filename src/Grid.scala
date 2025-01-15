@@ -365,11 +365,13 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
               box(k)(j).isPartOfMatch = true
               box(k)(j).display = false
               box(i)(j).bonus = false
+              level.increaseScore(10)
             }
             for (k <- box(i).indices) {
               box(i)(k).isPartOfMatch = true
               box(i)(k).display = false
               box(i)(k).bonus = false
+              level.increaseScore(10)
 
             }
             isMatch = true
