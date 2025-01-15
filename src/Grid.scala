@@ -219,7 +219,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       }
     }
 
-    for (i <- 0 until box.length - 1) {
+    for (i <- box.indices ) {
       for (j <- 0 until box.length - 1) {
         val temp: Element = box(i)(j)
         box(i)(j) = box(i)(j + 1).copy()
