@@ -15,13 +15,13 @@ class Position(var x: Int, var y: Int) {
   }
 }
 
+// Class that manages the grid and the main features of the game
 class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: FunGraphics) {
   val box: Array[Array[Element]] = Array.ofDim(nbOfElement, nbOfElement)
   val leftMargin: Int = 40
   val topMargin: Int = 80
   val caseWidth: Int = (width - leftMargin * 2) / nbOfElement
   val boxWidth: Int = caseWidth * nbOfElement
-  val bottomMargin: Int = display.getFrameHeight() - topMargin - boxWidth
   val possibilities: Array[String] = Array("/original/bug_big_eyes.png", "/original/bug_big_nose_blue.png", "/original/bug_eyes.png", "/original/bug_green.png", "/original/bug_smile.png")
   val bonus: String = "/oiseau angry_small.png"
   var select1: Position = new Position()
@@ -36,6 +36,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val buttonY = topMargin + boxWidth + topMargin / 2
   var selectable: Boolean = false
 
+  // Initiate the game
+  // Params:
+  //  restart – Indicate if the game restart after one has been already played
+  //  completely - Indicate if we restart the game from scratch
   def start(restart: Boolean = false, completely: Boolean = false): Unit = {
     selectable = true
     display.frontBuffer.synchronized {
@@ -55,10 +59,12 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
+  // Select a random element from the given array
   def randomElement(arr: Array[String]): String = {
     arr(Random.nextInt(arr.length))
   }
 
+  //Initiate the grid with new randomized element in each position
   def initializeElements(): Unit = {
     for (i <- box.indices) {
       for (j <- box(i).indices) {
@@ -68,6 +74,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
+  // Guaranty that all possible matches are resolved
   def resolveGrid(pregame: Boolean = false): Unit = {
     // Resolve matches until no more are found
     def resolveMatches(): Unit = {
@@ -81,7 +88,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
       }
     }
 
-    // Resolution logic
     resolveMatches()
     nextLevel()
     while (!isThereAPossibleMove()) {
@@ -114,6 +120,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
+  // Manage each element that needs to move down
   def cascadingElement(): Boolean = {
     var isCascading = false
     //update new positions by counting how many space the element will need to drop
@@ -126,7 +133,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             if (!box(i)(j).isPartOfMatch) {
               box(i)(j).toMove = true
             }
-            // check remove condition
             if (box(i)(j).countVerticalMoves > 0) {
               isCascading = true
             }
@@ -175,6 +181,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isCascading
   }
 
+  // The logic to keep moving down the elements if they need to fall down
   def resolveCascading(pregame: Boolean = false): Unit = {
     var isRunning: Boolean = false
     do {
@@ -190,11 +197,11 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     while (isRunning)
   }
 
+  // Animation to show which elements will disappear
   def explodeElements(): Unit = {
 
     var increment = 0
     do {
-      //display.clear()
       drawElements(animation = true, increment)
       Thread.sleep(50)
       increment += 1
@@ -202,6 +209,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     while (increment < 15)
   }
 
+  // Verify if the player can make a possible move
   def isThereAPossibleMove(): Boolean = {
     for (i <- box.indices) {
       for (j <- box(i).indices) {
@@ -238,6 +246,8 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     false
   }
 
+  // Manage the selection of the element
+  // return true if 2 valid elements are selected
   def select(x: Int, y: Int): Boolean = {
     var areThereTwoSelections = false
     val cellX: Int = x * caseWidth + leftMargin
@@ -267,12 +277,14 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     areThereTwoSelections
   }
 
+  // Check if a element is a horizontal or vertical neighbour (not diagonally)
   def isNeighbour(position: Position, x: Int, y: Int): Boolean = {
     !(position.x == x && position.y == y) &&
       (x == position.x && y >= position.y - 1 && y <= position.y + 1 ||
         (x >= position.x - 1 && x <= position.x + 1 && y == position.y))
   }
 
+  // Circle the elements we select
   def drawSelection(x: Int, y: Int, color: Color = Color.blue): Unit = {
     display.setColor(color)
     display.drawCircle(x, y, caseWidth)
@@ -280,12 +292,14 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     display.drawCircle(x - 2, y - 2, caseWidth + 4)
   }
 
-  def rollBack(): Boolean = {
+  // Reverse the elements position
+  def switchBack(): Unit = {
     switchPosition()
     resetSelection()
-    false
   }
 
+  // Switch the 2 selected elements
+  // return true if the switch is valid (will create a match)
   def switchPosition(): Boolean = {
     var isValid: Boolean = false
 
@@ -302,7 +316,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isValid
   }
 
-  //highJack argument is used to only know if there is at least one match. To save perf.
+  // Verify if there are possible matches and update element variable if this is the case.
+  //  HighJack argument is used to only know if there is at least one match. To save perf.
+  //  Pregame argument is to indicate if we want to resolve everything before a game start to have a clean game
+  //  with no already created match
   def identifyMatch(highJack: Boolean = false, pregame: Boolean = false): Boolean = {
     val impossibleValue = "99"
     var lastMatch: String = impossibleValue
@@ -438,6 +455,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     isMatch
   }
 
+  // clean the grid and rewrite the elements
   def clean(): Unit = {
     display.frontBuffer.synchronized {
       display.clear()
@@ -445,6 +463,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
+
+  // Draw elements depending on their state
+  //  animation argument allow to change position to animate the elements (dancing elements)
+  //  addSize argument is the value we want to increase the size of each element during animation
   def drawElements(animation: Boolean = false, addSize: Int = 10): Unit = {
     var iCount = 0
     var jCount = 0
@@ -501,22 +523,22 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   def displayScoring(): Unit = {
     val labelHeight = 40
     val labelWidth: Int = 140
-    val pink = new Color (254,224,246)
+    val pink = new Color(254, 224, 246)
     display.setColor(pink)
 
     //display level
-    display.drawFilledOval(display.getFrameWidth()/2 - labelWidth/2, display.getFrameHeight() - leftMargin - labelHeight/2, labelWidth, labelHeight)
-    drawFancyString(display.getFrameWidth() / 2, display.getFrameHeight() - leftMargin - fontSize/4, s"Level: ${level.level}")
+    display.drawFilledOval(display.getFrameWidth() / 2 - labelWidth / 2, display.getFrameHeight() - leftMargin - labelHeight / 2, labelWidth, labelHeight)
+    drawFancyString(display.getFrameWidth() / 2, display.getFrameHeight() - leftMargin - fontSize / 4, s"Level: ${level.level}")
 
     //display target and score
-    display.drawFilledOval(display.getFrameWidth() - labelWidth - 2*leftMargin - 20, topMargin + boxWidth + 20, labelWidth, leftMargin)
-    drawFancyString(display.getFrameWidth() - labelWidth / 2 - 2*leftMargin -20, topMargin + boxWidth + 2*labelHeight, s"Reach:${level.goal}", 18)
-    drawFancyString(display.getFrameWidth() - labelWidth / 2 - 2*leftMargin -20, topMargin + boxWidth + 20 + labelHeight/2 - fontSize / 4, s"${level.score}")
+    display.drawFilledOval(display.getFrameWidth() - labelWidth - 2 * leftMargin - 20, topMargin + boxWidth + 20, labelWidth, leftMargin)
+    drawFancyString(display.getFrameWidth() - labelWidth / 2 - 2 * leftMargin - 20, topMargin + boxWidth + 2 * labelHeight, s"Reach:${level.goal}", 18)
+    drawFancyString(display.getFrameWidth() - labelWidth / 2 - 2 * leftMargin - 20, topMargin + boxWidth + 20 + labelHeight / 2 - fontSize / 4, s"${level.score}")
 
     //display moves
-    display.drawFilledOval(2*leftMargin + 20, topMargin + boxWidth + 20, labelWidth, leftMargin)
-    drawFancyString(2*leftMargin + labelWidth / 2 +20, topMargin + boxWidth + 2*labelHeight, "Moves left:", 18)
-    drawFancyString(2*leftMargin + labelWidth / 2 +20, topMargin + boxWidth + 20 + labelHeight / 2 - fontSize / 4, s"${level.movesLeft}")
+    display.drawFilledOval(2 * leftMargin + 20, topMargin + boxWidth + 20, labelWidth, leftMargin)
+    drawFancyString(2 * leftMargin + labelWidth / 2 + 20, topMargin + boxWidth + 2 * labelHeight, "Moves left:", 18)
+    drawFancyString(2 * leftMargin + labelWidth / 2 + 20, topMargin + boxWidth + 20 + labelHeight / 2 - fontSize / 4, s"${level.movesLeft}")
 
 
   }
@@ -532,10 +554,10 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     display.drawFillRect(leftMargin, topMargin, boxWidth, boxWidth)
 
     //display title
-    display.drawTransformedPicture(display.getFrameWidth()/2, topMargin/2, 0, 0.3, title)
+    display.drawTransformedPicture(display.getFrameWidth() / 2, topMargin / 2, 0, 0.3, title)
     //display mascots
-    display.drawTransformedPicture(leftMargin, boxWidth + 2*topMargin, 0, 0.5, mascotAurelie)
-    display.drawTransformedPicture(boxWidth + leftMargin, boxWidth + 2*topMargin, 0, 0.5, mascotGrace)
+    display.drawTransformedPicture(leftMargin, boxWidth + 2 * topMargin, 0, 0.5, mascotAurelie)
+    display.drawTransformedPicture(boxWidth + leftMargin, boxWidth + 2 * topMargin, 0, 0.5, mascotGrace)
 
     displayScoring()
   }
@@ -545,6 +567,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     select2 = new Position()
   }
 
+  // Mix all the elements in different positions (usefull if there is no available possible moves)
   def shuffle(): Unit = {
     val tempArray: Array[Array[Element]] = Array.ofDim(nbOfElement, nbOfElement)
 
@@ -569,6 +592,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     clean()
   }
 
+  // Manage the end of a level and start a new level/game or end the game
   def nextLevel(): Unit = {
     if (level.isLevelFinished()) {
       totalScore += level.score
@@ -598,7 +622,6 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
         start(restart = true)
       }
       else {
-
         display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)
         drawFancyString(display.getFrameWidth() / 2, topMargin + boxWidth + topMargin / 2 + buttonHeight / 2 - fontSize / 4, "RESTART")
 
@@ -606,6 +629,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
     }
   }
 
+  // Manage the restart button at the end of the game
   def clickButton(x: Int, y: Int): Boolean = {
     display.setColor(Color.GRAY)
     display.drawFillRect(buttonX, buttonY, buttonWidth, buttonHeight)

@@ -1,5 +1,6 @@
 import hevs.graphics.utils.GraphicsBitmap
 
+// Class to store the score of the current level
 class Scoring(var level:Int) {
   var score:Int = 0
   var goal:Int = 1000
@@ -20,6 +21,7 @@ class Scoring(var level:Int) {
     level > lastLevel || (level==lastLevel && isLevelFinished())
   }
 
+  // Show different images based on the state of the game
   def endMessage(): GraphicsBitmap = {
       val levelup = new GraphicsBitmap("/res/level.png")
       val gameover = new GraphicsBitmap("/res/gameover.png")

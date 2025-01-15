@@ -6,7 +6,7 @@ object Game extends App {
   val width: Int = 600
   val height: Int = 800
   val nbOfElement: Int = 8
-  val display: FunGraphics = new FunGraphics(width, height, 450, 0, "Bugs crasher", true)
+  val display: FunGraphics = new FunGraphics(width, height, 450, 0, "Bugs Crusher", true)
   var game: Grid = new Grid(width, height, nbOfElement, display)
 
   game.start()
@@ -15,20 +15,24 @@ object Game extends App {
     override def mouseClicked(e: MouseEvent): Unit = {}
 
     override def mousePressed(e: MouseEvent): Unit = {
+      // Convert the position of the pointer to the grid position index
       val clickX = e.getX
       val clickY = e.getY
       val caseNumberX = (clickX - game.leftMargin) / game.caseWidth
       val caseNumberY = (clickY - game.topMargin) / game.caseWidth
 
+      // Activate the resolution of the grid if the 2 selected numbers are authorized
+      // if, not rollback the positions switch
       if (game.selectable && game.select(caseNumberX, caseNumberY)) {
         if (game.switchPosition()) {
           game.resolveGrid()
         }
         else {
-          game.rollBack()
+          game.switchBack()
         }
       }
-      else if(!game.selectable && game.clickButton(clickX,clickY)) {
+      // If the game si finished, capture if the player click on the restart button
+      else if (!game.selectable && game.clickButton(clickX, clickY)) {
         game.start(restart = true, completely = true)
       }
     }
