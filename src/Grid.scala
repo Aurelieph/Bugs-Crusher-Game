@@ -23,7 +23,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
   val boxWidth: Int = caseWidth * nbOfElement
   val bottomMargin: Int = display.getFrameHeight() - topMargin - boxWidth
   val possibilities: Array[String] = Array("/original/bug_big_eyes.png", "/original/bug_big_nose_blue.png", "/original/bug_eyes.png", "/original/bug_green.png", "/original/bug_smile.png")
-  val bonus: String = "/dynamite.png"
+  val bonus: String = "/oiseau angry_small.png"
   var select1: Position = new Position()
   var select2: Position = new Position()
   var currentLevel: Int = 1
@@ -141,6 +141,7 @@ class Grid(val width: Int, val height: Int, val nbOfElement: Int, val display: F
             box(i)(nbOfElement - j - 1).toMove = false
             box(i)(nbOfElement - j) = box(i)(nbOfElement - j - 1).copy()
             box(i)(nbOfElement - j - 1).display = false
+            box(i)(nbOfElement - j - 1).bonus = false
             if (nbOfElement - j - 1 == 0) {
               box(i)(nbOfElement - j - 1).toGenerate = true
             }
