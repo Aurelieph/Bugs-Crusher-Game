@@ -101,6 +101,11 @@ Manages the score and level mechanics.
 ## Screenshots
 
 ![BugsCrusher1](https://github.com/user-attachments/assets/15bf33e5-7b17-43cc-8d84-dc6a68755986)
+
+<sup><sub>
+**Angry Birds Bird Image:** Used in this project for educational purposes only. The image is a property of [Rovio Entertainment](https://www.rovio.com). All rights reserved.</sub></sup>
+
 ![gameoverBugsCrusher](https://github.com/user-attachments/assets/ec1ff21d-d926-45a2-987d-718e8da1d01d)
 ![levelupBugsCrusher](https://github.com/user-attachments/assets/6c76ba9f-9041-4e35-93df-09e89acb09af)
 ![winBugsCrusher](https://github.com/user-attachments/assets/08ec4967-f611-4426-8564-62ec63dd5b0f)
+
